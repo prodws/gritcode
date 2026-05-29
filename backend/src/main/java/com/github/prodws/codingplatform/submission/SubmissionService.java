@@ -25,9 +25,9 @@ public class SubmissionService {
             SubmissionExecutor submissionExecutor,
             SubmissionEvaluator evaluator,
             SubmissionRequestFactory requestFactory,
-            SolutionCodeValidator validator, 
-            UserRepository userRepository, 
-            ProblemRepository problemRepository, 
+            SolutionCodeValidator validator,
+            UserRepository userRepository,
+            ProblemRepository problemRepository,
             SubmissionRepository submissionRepository
     ) {
         this.problemService = problemService;
@@ -50,7 +50,7 @@ public class SubmissionService {
                     requestFactory.build(problem, solutionCode);
             RawExecutionResult raw = submissionExecutor.execute(request);
             ExecutionResult result = toExecutionResult(raw);
-            
+
             log.info("Submission finished: problemId={}, status={}",
                     problemId, result.status());
             return result;
@@ -74,18 +74,21 @@ public class SubmissionService {
             );
         }
     }
-    
+
     public Submission saveSubmission(Long userId, Long problemId, String code, ExecutionResult result) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Problem problem = problemRepository.findById(problemId)
                 .orElseThrow(() -> new RuntimeException("Problem not found"));
-        
+
         Submission submission = Submission.builder()
                 .user(user)
                 .problem(problem)
                 .code(code)
                 .status(result.status())
+                .stdout(result.stdout())
+                .stderr(result.stderr())
+                .passed(result.passed())
                 .build();
 
         return submissionRepository.save(submission);

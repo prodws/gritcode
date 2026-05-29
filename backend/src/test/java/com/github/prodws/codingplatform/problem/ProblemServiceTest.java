@@ -184,7 +184,7 @@ class ProblemServiceTest {
                 ProblemType.SELECTION,
                 "Stack Basics",
                 ProblemDifficulty.EASY,
-                List.of(new FileInput("problems/stack-basics/description.md", "description.md", FileRole.DESCRIPTION)),
+                List.of(new FileInput("problems/.stack-basics/description.md", "description.md", FileRole.DESCRIPTION)),
                 List.of(new OptionInput("LIFO", true))
         );
 

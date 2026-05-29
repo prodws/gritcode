@@ -94,6 +94,14 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public boolean checkAvailability(String field, String value) {
+        return switch (field) {
+            case "username" -> !userRepository.existsByUsername(value);
+            case "email"    -> !userRepository.existsByEmail(value);
+            default -> throw new IllegalArgumentException("Unknown field: " + field);
+        };
+    }
+
     public User addPoints(Long id, Long pointsToAdd) {
         User user = getUserById(id);
         user.setTotalPoints(user.getTotalPoints() + pointsToAdd);

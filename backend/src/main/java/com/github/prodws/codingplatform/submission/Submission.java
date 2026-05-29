@@ -36,6 +36,14 @@ public class Submission {
     @Column(columnDefinition = "TEXT")
     private String code;
 
+    @Column(columnDefinition = "TEXT")
+    private String stdout;
+
+    @Column(columnDefinition = "TEXT")
+    private String stderr;
+
+    private boolean passed;
+
     private long executionTimeMs;
     private long memoryUsedBytes;
     private int pointsEarned;

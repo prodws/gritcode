@@ -4,11 +4,15 @@ import com.github.prodws.codingplatform.problem.registration.CreateProblemReques
 import com.github.prodws.codingplatform.problem.registration.FileInput;
 import com.github.prodws.codingplatform.problem.registration.OptionInput;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Controller
@@ -44,6 +48,16 @@ public class ProblemResolver {
     @QueryMapping
     public List<Problem> problems() {
         return problemService.getProblems();
+    }
+
+    @QueryMapping
+    public String fileContent(@Argument String path) {
+        try {
+            Resource resource = new ClassPathResource(path);
+            return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return "";
+        }
     }
 
 }

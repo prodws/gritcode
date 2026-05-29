@@ -2,6 +2,9 @@ type Query {
     problems: [Problem!]!
     userByUsername(username: String!): User
     randomProblem(difficulty: ProblemDifficulty!): Problem
+    me: User
+    fileContent(path: String!): String!
+    checkAvailability(field: String!, value: String!): Boolean!
 }
 
 type Mutation {
@@ -37,6 +40,7 @@ type Problem {
     difficulty: ProblemDifficulty
     type: ProblemType
     createdAt: String
+    files: [File!]!
 }
 
 type Submission {
@@ -45,13 +49,24 @@ type Submission {
     problem: Problem
     code: String!
     status: ExecutionStatus!
+    stdout: String
+    stderr: String
+    passed: Boolean!
 }
+
+
 
 type ExecutionResult {
     status: ExecutionStatus!
     stdout: String!
     stderr: String!
     passed: Boolean!
+}
+
+type File {
+    filePath: String!
+    fileName: String!
+    fileRole: FileRole!
 }
 
 # Input types

@@ -6,6 +6,8 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -40,5 +42,16 @@ public class UserResolver {
     @MutationMapping
     public User updatePassword(@Argument String newPassword, Authentication auth) {
         return userService.updatePassword( AuthUtils.extractUserId(auth), newPassword);
+    }
+
+    @QueryMapping
+    public boolean checkAvailability(@Argument String field, @Argument String value) {
+        return userService.checkAvailability(field, value);
+    }
+
+    @QueryMapping
+    public User me(Authentication authentication) {
+        if (authentication == null) throw new RuntimeException("Not authenticated");
+        return userService.getUserById(Long.parseLong(authentication.getName()));
     }
 }
