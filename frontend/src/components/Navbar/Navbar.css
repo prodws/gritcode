@@ -1,0 +1,69 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 40px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.navbar-logo {
+  font-size: 17px;
+  letter-spacing: 0.1em;
+  color: var(--text);
+  text-decoration: none;
+  background: none;
+  border: none;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: color 0.2s, text-shadow 0.2s;
+}
+
+.navbar-link {
+  background: none;
+  border: none;
+  font-family: var(--font);
+  font-size: 17px;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-transform: lowercase;
+  transition: color 0.2s, text-shadow 0.2s;
+}
+
+.navbar-link:hover {
+  color: var(--accent);
+}
+
+body[data-theme='dark'] .navbar-link:hover {
+  text-shadow: 0 0 8px var(--accent);
+}
+
+.user-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+}
+
+.user-menu button {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-family: var(--font);
+  padding: 10px 20px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.user-menu button:hover {
+  background-color: var(--border);
+}
