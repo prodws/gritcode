@@ -14,7 +14,7 @@ export const AppProvider = ({ children }) => {
     const [authMode, setAuthMode] = useState('login');
     const [error, setError] = useState({ field: null, message: null });
     const [success, setSuccess] = useState({ field: null, message: null });
-    const [theme, setTheme] = useState('dark');
+    const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
     const [currentProblem, setCurrentProblem] = useState(null);
     const [editorContent, setEditorContent] = useState('');
     const [submissionResult, setSubmissionResult] = useState(null);
@@ -219,7 +219,10 @@ export const AppProvider = ({ children }) => {
         setTheme(currentTheme => (currentTheme === 'dark' ? 'light' : 'dark'));
     }, []);
 
-    useEffect(() => { document.body.setAttribute('data-theme', theme); }, [theme]);
+    useEffect(() => {
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }, [theme]);
 
     useEffect(() => {
         if (success.message) {
