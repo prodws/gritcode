@@ -1,4 +1,5 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import ReactMarkdown from 'react-markdown';
 import { AppContext } from '../../context/AppContext';
@@ -11,6 +12,7 @@ const PracticePage = () => {
         setEditorContent,
         submissionResult,
         handleSubmit,
+        handleRun,
     } = useContext(AppContext);
 
     const [terminalHeight, setTerminalHeight] = useState(200);
@@ -40,9 +42,7 @@ const PracticePage = () => {
         };
     }, [isDragging]);
 
-    if (!currentProblem) {
-        return <div>Loading problem...</div>;
-    }
+    if (!currentProblem) return <Navigate to="/" replace />;
 
     const description = currentProblem?.description ?? '';
     const diff = currentProblem?.difficulty?.toLowerCase();
@@ -56,7 +56,7 @@ const PracticePage = () => {
                 </div>
                 <div className="practice-actions">
                     <select className="practice-lang"><option>java</option></select>
-                    <button className="practice-run">run</button>
+                    <button className="practice-run" onClick={handleRun}>run</button>
                     <button className="practice-submit" onClick={handleSubmit}>submit</button>
                 </div>
             </div>

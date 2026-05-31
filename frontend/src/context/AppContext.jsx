@@ -216,6 +216,19 @@ export const AppProvider = ({ children }) => {
         if (data.data?.submitSolution) setSubmissionResult(data.data.submitSolution);
     }, [token, currentUser, currentProblem, editorContent]);
 
+    const handleRun = useCallback(async () => {
+        if (!currentUser || !currentProblem) return;
+        const res = await fetch('http://localhost:8080/graphql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+                query: `mutation { runSolution(input: { userId: "${currentUser.id}", problemId: "${currentProblem.id}", solutionCode: ${JSON.stringify(editorContent)} }) { status passed stdout stderr } }`,
+            }),
+        });
+        const data = await res.json();
+        if (data.data?.runSolution) setSubmissionResult(data.data.runSolution);
+    }, [token, currentUser, currentProblem, editorContent]);
+
     const toggleTheme = useCallback(() => {
         setTheme(currentTheme => (currentTheme === 'dark' ? 'light' : 'dark'));
     }, []);
@@ -274,6 +287,7 @@ export const AppProvider = ({ children }) => {
         setEditorContent,
         submissionResult,
         handleSubmit,
+        handleRun,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

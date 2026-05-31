@@ -12,14 +12,18 @@ public class SubmissionResolver {
 
     @MutationMapping
     public Submission submitSolution(@Argument("input") SubmitSolutionInput input) {
-        ExecutionResult executionResult = 
+        ExecutionResult executionResult =
                 submissionService.submitSolution(input.problemId(), input.solutionCode());
-        
         return submissionService.saveSubmission(
-                input.userId(), 
-                input.problemId(), 
+                input.userId(),
+                input.problemId(),
                 input.solutionCode(),
                 executionResult
         );
+    }
+
+    @MutationMapping
+    public ExecutionResult runSolution(@Argument("input") SubmitSolutionInput input) {
+        return submissionService.submitSolution(input.problemId(), input.solutionCode());
     }
 }
