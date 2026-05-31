@@ -10,6 +10,7 @@ export const AppProvider = ({ children }) => {
 
     // State
     const [token, setToken] = useState(() => localStorage.getItem('token'));
+    const [authLoading, setAuthLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState(null);
     const [authMode, setAuthMode] = useState('login');
     const [error, setError] = useState({ field: null, message: null });
@@ -242,13 +243,17 @@ export const AppProvider = ({ children }) => {
             .then(res => res.json())
             .then(userData => {
                 if (userData.data?.me) setCurrentUser(userData.data.me);
-            });
+            })
+            .finally(() => setTimeout(() => setAuthLoading(false), 600));
+        } else {
+            setTimeout(() => setAuthLoading(false), 600);
         }
     }, []);
 
     const value = {
         token,
         currentUser,
+        authLoading,
         theme,
         toggleTheme,
         login,

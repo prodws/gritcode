@@ -36,6 +36,24 @@ body {
   transition: background-color 0.3s, color 0.3s;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.app-fade {
+  animation: fadeIn 0.4s ease;
+}
+
+.spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
 .compete-btn, .auth-submit {
   background: none;
   border: none;
