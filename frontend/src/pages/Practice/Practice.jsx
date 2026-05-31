@@ -4,6 +4,65 @@ import Editor from '@monaco-editor/react';
 import ReactMarkdown from 'react-markdown';
 import { AppContext } from '../../context/AppContext';
 import Spinner from '../../components/Spinner/Spinner';
+import './Practice.css';
+
+const STATUS_COLOR = {
+    PASSED: 'var(--success)',
+    TESTS_FAILED: 'var(--error)',
+    COMPILE_ERROR: 'var(--error)',
+    RUNTIME_ERROR: 'var(--error)',
+    TIMEOUT: 'var(--error)',
+    INVALID_SUBMISSION: 'var(--text-muted)',
+    SYSTEM_ERROR: 'var(--text-muted)',
+};
+
+const PASS_QUIPS = [
+    'clean run.',
+    'all tests green.',
+    'no failures.',
+    'looking good.',
+    'nice work.',
+    'ship it.',
+    'flawless.',
+];
+
+const parseRunTime = (stdout) => {
+    const match = stdout?.match(/Test run finished after (\d+) ms/);
+    return match ? `${match[1]}ms` : null;
+};
+
+const SubmissionResult = ({ result }) => {
+    const color = STATUS_COLOR[result.status] || 'var(--text-muted)';
+    const isPassed = result.status === 'PASSED';
+    const quip = isPassed ? PASS_QUIPS[Math.floor(Math.random() * PASS_QUIPS.length)] : null;
+    const runTime = parseRunTime(result.stdout);
+
+    return (
+        <div className="result-card">
+            <div className="result-status" style={{ color }}>
+                {result.status.replace(/_/g, ' ')}
+            </div>
+            {isPassed && (
+                <div className="result-meta">
+                    {runTime && <span>{runTime}</span>}
+                    <span className="result-quip">{quip}</span>
+                </div>
+            )}
+            {!isPassed && result.stdout && (
+                <div className="result-section">
+                    <span className="result-label">stdout</span>
+                    <pre className="result-pre">{result.stdout}</pre>
+                </div>
+            )}
+            {result.stderr && (
+                <div className="result-section">
+                    <span className="result-label">stderr</span>
+                    <pre className="result-pre result-pre--err">{result.stderr}</pre>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const PracticePage = () => {
     const {
@@ -108,18 +167,12 @@ const PracticePage = () => {
                                 </div>
                                 <div className="terminal-content">
                                     {submissionLoading ? (
-                                        <Spinner inline />
+                                        <div className="terminal-running">
+                                            <Spinner inline />
+                                            <span>running tests</span>
+                                        </div>
                                     ) : submissionResult ? (
-                                        <>
-                                            <div>ID: {submissionResult.id}</div>
-                                            <div>Status: {submissionResult.status}</div>
-                                            <div>stdout:</div>
-                                            <pre>{submissionResult.stdout || 'no stdout'}</pre>
-                                            <div>stderr:</div>
-                                            <pre>{submissionResult.stderr || 'no stderr'}</pre>
-                                            <div>passed:</div>
-                                            <pre>{submissionResult.passed ? 'true' : 'false'}</pre>
-                                        </>
+                                        <SubmissionResult result={submissionResult} />
                                     ) : (
                                         <div className="terminal-empty">
                                             no submission yet
