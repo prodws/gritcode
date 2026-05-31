@@ -13,12 +13,10 @@ const PracticePage = () => {
         handleSubmit,
     } = useContext(AppContext);
 
-    const [terminalOpen, setTerminalOpen] = useState(true);
     const [terminalHeight, setTerminalHeight] = useState(200);
     const [isDragging, setIsDragging] = useState(false);
     const startYRef = useRef(0);
     const startHeightRef = useRef(0);
-    const terminalMinHeight = 0;
 
     const onMouseDown = (e) => {
         setIsDragging(true);
@@ -30,7 +28,7 @@ const PracticePage = () => {
         const onMouseMove = (e) => {
             if (!isDragging) return;
             const delta = startYRef.current - e.clientY;
-            const newHeight = Math.max(terminalMinHeight, startHeightRef.current + delta);
+            const newHeight = Math.max(0, startHeightRef.current + delta);
             setTerminalHeight(newHeight);
         };
         const onMouseUp = () => setIsDragging(false);
@@ -81,11 +79,7 @@ const PracticePage = () => {
                         <div className="editor-terminal-container">
                             <div
                                 className="monaco-container"
-                                style={{
-                                    height: terminalOpen
-                                        ? `calc(100% - ${terminalHeight}px)`
-                                        : '100%'
-                                }}
+                                style={{ height: `calc(100% - ${terminalHeight}px)` }}
                             >
                                 <Editor
                                     key={currentProblem?.id}
@@ -98,56 +92,37 @@ const PracticePage = () => {
                                 />
                             </div>
 
-                            {terminalOpen && (
-                                <div
-                                    className="terminal-resize-handle"
-                                    onMouseDown={onMouseDown}
-                                />
-                            )}
+                            <div
+                                className="terminal-resize-handle"
+                                onMouseDown={onMouseDown}
+                            />
 
                             <div
                                 className="terminal-panel"
-                                style={{ height: terminalOpen ? terminalHeight : 0 }}
+                                style={{ height: terminalHeight }}
                             >
-                                {terminalOpen && (
-                                    <>
-                                        <div className="terminal-header">
-                                            <span>submission</span>
-                                            <button
-                                                className="terminal-toggle"
-                                                onClick={() => setTerminalOpen(false)}
-                                            >
-                                                ✕
-                                            </button>
+                                <div className="terminal-header">
+                                    <span>submission</span>
+                                </div>
+                                <div className="terminal-content">
+                                    {submissionResult ? (
+                                        <>
+                                            <div>ID: {submissionResult.id}</div>
+                                            <div>Status: {submissionResult.status}</div>
+                                            <div>stdout:</div>
+                                            <pre>{submissionResult.stdout || 'no stdout'}</pre>
+                                            <div>stderr:</div>
+                                            <pre>{submissionResult.stderr || 'no stderr'}</pre>
+                                            <div>passed:</div>
+                                            <pre>{submissionResult.passed ? 'true' : 'false'}</pre>
+                                        </>
+                                    ) : (
+                                        <div className="terminal-empty">
+                                            no submission yet
                                         </div>
-                                        <div className="terminal-content">
-                                            {submissionResult ? (
-                                                <>
-                                                    <div>ID: {submissionResult.id}</div>
-                                                    <div>Status: {submissionResult.status}</div>
-                                                    <div>stdout:</div>
-                                                    <pre>{submissionResult.stdout || 'no stdout'}</pre>
-                                                    <div>stderr:</div>
-                                                    <pre>{submissionResult.stderr || 'no stderr'}</pre>
-                                                    <div>passed:</div>
-                                                    <pre>{submissionResult.passed ? 'true' : 'false'}</pre>
-                                                </>
-                                            ) : (
-                                                <div className="terminal-empty">
-                                                    no submission yet
-                                                </div>
-                                            )}
-                                        </div>
-                                    </>
-                                )}
+                                    )}
+                                </div>
                             </div>
-
-                            {!terminalOpen && (
-                                <div
-                                    className="terminal-reopen-handle"
-                                    onClick={() => setTerminalOpen(true)}
-                                />
-                            )}
                         </div>
                     </div>
                 </div>

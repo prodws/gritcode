@@ -260,16 +260,6 @@
     opacity: 0.7;
 }
 
-.terminal-reopen-handle {
-    height: 6px;
-    background: var(--border);
-    opacity: 0.25;
-    cursor: row-resize;
-}
-
-.terminal-reopen-handle:hover {
-    opacity: 0.6;
-}
 
 .terminal-empty {
     color: var(--text-muted);
