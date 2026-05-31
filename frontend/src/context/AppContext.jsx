@@ -19,6 +19,7 @@ export const AppProvider = ({ children }) => {
     const [currentProblem, setCurrentProblem] = useState(null);
     const [editorContent, setEditorContent] = useState('');
     const [submissionResult, setSubmissionResult] = useState(null);
+    const [submissionLoading, setSubmissionLoading] = useState(false);
     const [availability, setAvailability] = useState({});
 
     // Logic
@@ -205,6 +206,7 @@ export const AppProvider = ({ children }) => {
 
     const handleSubmit = useCallback(async () => {
         if (!currentUser || !currentProblem) return;
+        setSubmissionLoading(true);
         const res = await fetch('http://localhost:8080/graphql', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -214,10 +216,12 @@ export const AppProvider = ({ children }) => {
         });
         const data = await res.json();
         if (data.data?.submitSolution) setSubmissionResult(data.data.submitSolution);
+        setSubmissionLoading(false);
     }, [token, currentUser, currentProblem, editorContent]);
 
     const handleRun = useCallback(async () => {
         if (!currentUser || !currentProblem) return;
+        setSubmissionLoading(true);
         const res = await fetch('http://localhost:8080/graphql', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -227,6 +231,7 @@ export const AppProvider = ({ children }) => {
         });
         const data = await res.json();
         if (data.data?.runSolution) setSubmissionResult(data.data.runSolution);
+        setSubmissionLoading(false);
     }, [token, currentUser, currentProblem, editorContent]);
 
     const toggleTheme = useCallback(() => {
@@ -288,6 +293,7 @@ export const AppProvider = ({ children }) => {
         submissionResult,
         handleSubmit,
         handleRun,
+        submissionLoading,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

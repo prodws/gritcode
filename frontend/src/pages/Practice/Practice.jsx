@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import ReactMarkdown from 'react-markdown';
 import { AppContext } from '../../context/AppContext';
+import Spinner from '../../components/Spinner/Spinner';
 
 const PracticePage = () => {
     const {
@@ -11,6 +12,7 @@ const PracticePage = () => {
         editorContent,
         setEditorContent,
         submissionResult,
+        submissionLoading,
         handleSubmit,
         handleRun,
     } = useContext(AppContext);
@@ -105,7 +107,9 @@ const PracticePage = () => {
                                     <span>submission</span>
                                 </div>
                                 <div className="terminal-content">
-                                    {submissionResult ? (
+                                    {submissionLoading ? (
+                                        <Spinner inline />
+                                    ) : submissionResult ? (
                                         <>
                                             <div>ID: {submissionResult.id}</div>
                                             <div>Status: {submissionResult.status}</div>
@@ -121,6 +125,7 @@ const PracticePage = () => {
                                             no submission yet
                                         </div>
                                     )}
+
                                 </div>
                             </div>
                         </div>

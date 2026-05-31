@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 const FRAMES = ['/', '—', '\\', '|'];
 
-const Spinner = () => {
+const Spinner = ({ inline = false }) => {
     const [frame, setFrame] = useState(0);
 
     useEffect(() => {
@@ -11,7 +11,7 @@ const Spinner = () => {
     }, []);
 
     return (
-        <div className="spinner">
+        <div className={inline ? 'spinner-inline' : 'spinner'}>
             {FRAMES[frame]}
         </div>
     );
