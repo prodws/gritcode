@@ -1,0 +1,10 @@
+{
+  "type": "CODING",
+  "title": "Climbing Stairs",
+  "difficulty": "EASY",
+  "files": [
+    { "path": "problems/climbing-stairs/description.md", "name": "description.md", "role": "DESCRIPTION" },
+    { "path": "problems/climbing-stairs/Solution.java", "name": "Solution.java", "role": "TEMPLATE" },
+    { "path": "problems/climbing-stairs/MainTest.java", "name": "MainTest.java", "role": "TEST" }
+  ]
+}

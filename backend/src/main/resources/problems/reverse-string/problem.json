@@ -1,0 +1,10 @@
+{
+  "type": "CODING",
+  "title": "Reverse String",
+  "difficulty": "EASY",
+  "files": [
+    { "path": "problems/reverse-string/description.md", "name": "description.md", "role": "DESCRIPTION" },
+    { "path": "problems/reverse-string/Solution.java", "name": "Solution.java", "role": "TEMPLATE" },
+    { "path": "problems/reverse-string/MainTest.java", "name": "MainTest.java", "role": "TEST" }
+  ]
+}

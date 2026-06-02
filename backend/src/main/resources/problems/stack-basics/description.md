@@ -1,4 +1,3 @@
-# Stack Basics
 
 Which statements about a stack are true?
 

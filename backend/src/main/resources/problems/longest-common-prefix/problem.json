@@ -1,0 +1,10 @@
+{
+  "type": "CODING",
+  "title": "Longest Common Prefix",
+  "difficulty": "EASY",
+  "files": [
+    { "path": "problems/longest-common-prefix/description.md", "name": "description.md", "role": "DESCRIPTION" },
+    { "path": "problems/longest-common-prefix/Solution.java", "name": "Solution.java", "role": "TEMPLATE" },
+    { "path": "problems/longest-common-prefix/MainTest.java", "name": "MainTest.java", "role": "TEST" }
+  ]
+}

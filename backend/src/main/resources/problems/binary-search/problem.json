@@ -1,0 +1,10 @@
+{
+  "type": "CODING",
+  "title": "Binary Search",
+  "difficulty": "EASY",
+  "files": [
+    { "path": "problems/binary-search/description.md", "name": "description.md", "role": "DESCRIPTION" },
+    { "path": "problems/binary-search/Solution.java", "name": "Solution.java", "role": "TEMPLATE" },
+    { "path": "problems/binary-search/MainTest.java", "name": "MainTest.java", "role": "TEST" }
+  ]
+}
