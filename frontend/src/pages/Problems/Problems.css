@@ -262,6 +262,22 @@ body:not([data-theme='light']) .sidebar-action.active {
     padding: 2px 4px;
 }
 
+.filter-bar-shuffle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.filter-bar-shuffle:hover {
+    color: var(--accent);
+}
+
 .filter-bar-search {
     background: none;
     border: none;

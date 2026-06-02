@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { JavaOriginal } from 'devicons-react';
-import { Eye, EyeClosed } from 'lucide-react';
+import { Eye, EyeClosed, Shuffle } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 import './Problems.css';
 
@@ -95,20 +95,44 @@ const ProblemsPage = () => {
     }, [selected]);
 
     useEffect(() => {
+        if (selected) localStorage.setItem('problems-selected-id', selected.id);
+    }, [selected]);
+
+    useEffect(() => {
         fetch('http://localhost:8080/graphql', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ query: `{ problems { id title difficulty type files { filePath fileRole } } }` }),
         })
         .then(r => r.json())
-        .then(data => {
+        .then(async data => {
             const list = (data.data?.problems ?? []).filter(p => p.type === 'CODING');
             setProblems(list);
             setLoading(false);
+            const statusMap = await loadStatuses();
+            const savedId = localStorage.getItem('problems-selected-id');
+            const saved = savedId ? list.find(p => p.id === savedId) : null;
+            if (saved) {
+                setSelected(saved);
+            } else {
+                const pick = pickRandomProblem(list, statusMap);
+                if (pick) setSelected(pick);
+            }
             loadDescs(list);
-            loadStatuses();
         });
     }, [token]);
+
+    const pickRandomProblem = (list, statusMap) => {
+        const unseen = list.filter(p => !statusMap[p.id]);
+        const attempted = list.filter(p => statusMap[p.id] === 'attempted');
+        const pool = unseen.length > 0 ? unseen : attempted.length > 0 ? attempted : list;
+        return pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : null;
+    };
+
+    const shuffleSelection = () => {
+        const pick = pickRandomProblem(problems, statuses);
+        if (pick) setSelected(pick);
+    };
 
 
     const loadDescs = async (list) => {
@@ -144,6 +168,7 @@ const ProblemsPage = () => {
         });
         setStatuses(map);
         setAttemptCounts(attempts);
+        return map;
     };
 
 
@@ -184,6 +209,13 @@ const ProblemsPage = () => {
                                     onChange={e => setSearch(e.target.value)}
                                 />
                             </div>
+                            <button
+                                className="filter-bar-shuffle"
+                                onClick={shuffleSelection}
+                                title="pick a random problem"
+                            >
+                                <Shuffle size={14} />
+                            </button>
                             <div className="filter-bar-divider" />
                             {['solved', 'attempted'].map(opt => {
                                 const isHidden = hidden.has(opt);
