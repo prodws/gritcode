@@ -55,6 +55,7 @@ type Submission {
     stdout: String
     stderr: String
     passed: Boolean!
+    createdAt: String
 }
 
 
