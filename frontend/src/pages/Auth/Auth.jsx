@@ -2,6 +2,7 @@ import React, { useState, useRef, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
 import { validateUsername, validateEmail, validatePassword } from '../../utils/validation';
+import './Auth.css';
 
 const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -112,95 +113,75 @@ const AuthPage = () => {
         return null;
     };
 
+    const isRegister = authMode === 'register';
+
     return (
         <div className="auth-container">
-            <form className="auth-box" onSubmit={authMode === 'login' ? handleLogin : handleRegister} noValidate>
-                {authMode === 'register' && (
-                    <>
-                        <div className="auth-field">
-                            <p className="auth-label">username</p>
-                            <input
-                                value={username}
-                                onChange={handleUsernameChange}
-                                className={getInputClass('username', username)}
-                            />
-                            {getErrMsg('username', username) && (
-                                <p className="field-error">{getErrMsg('username', username)}</p>
-                            )}
-                            {availability.username === true && !liveErrors.username && error.field !== 'username' && username && (
-                                <p className="field-success">available</p>
-                            )}
-                        </div>
-                        <div className="auth-field">
-                            <p className="auth-label">email</p>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={handleEmailChange}
-                                className={getInputClass('email', email)}
-                            />
-                            {getErrMsg('email', email) && (
-                                <p className="field-error">{getErrMsg('email', email)}</p>
-                            )}
-                        </div>
-                        <div className="auth-field">
-                            <p className="auth-label">password</p>
-                            <div className="password-field">
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={password}
-                                    onChange={handlePasswordChange}
-                                    className={getInputClass('password', password)}
-                                />
-                                <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
-                                    {showPassword ? '✶' : '✧'}
-                                </button>
-                                {getErrMsg('password', password) && (
-                                    <p className="field-error">{getErrMsg('password', password)}</p>
-                                )}
-                            </div>
-                        </div>
-                    </>
-                )}
+            <div className="auth-card">
+                <form className="auth-box" onSubmit={isRegister ? handleRegister : handleLogin} noValidate>
 
-                {authMode === 'login' && (
-                    <>
-                        <div className="auth-field">
-                            <p className="auth-label">username or email</p>
-                            <input
-                                value={emailOrUsername}
-                                onChange={e => { setEmailOrUsername(e.target.value); clearFieldState('login'); }}
-                                className={getInputClass('login', emailOrUsername)}
-                            />
-                            {getErrMsg('login', emailOrUsername) && (
-                                <p className="field-error">{getErrMsg('login', emailOrUsername)}</p>
-                            )}
-                        </div>
-                        <div className="auth-field">
-                            <p className="auth-label">password</p>
-                            <div className="password-field">
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={password}
-                                    onChange={e => setPassword(e.target.value)}
-                                    className={submitted && !password ? 'error' : ''}
-                                />
-                                <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
-                                    {showPassword ? '✶' : '✧'}
-                                </button>
-                            </div>
-                        </div>
-                    </>
-                )}
+                    <div className={`auth-field auth-field--slide${isRegister ? ' visible' : ''}`}>
+                        <input
+                            placeholder="username"
+                            value={username}
+                            onChange={handleUsernameChange}
+                            className={getInputClass('username', username)}
+                            tabIndex={isRegister ? 0 : -1}
+                        />
+                        {getErrMsg('username', username) && <p className="field-error">{getErrMsg('username', username)}</p>}
+                        {availability.username === true && !liveErrors.username && error.field !== 'username' && username && (
+                            <p className="field-success">available</p>
+                        )}
+                    </div>
 
-                <button type="submit" className="auth-submit">
-                    {authMode === 'login' ? 'sign in' : 'create account'}
+                    <div className={`auth-field auth-field--slide${isRegister ? ' visible' : ''}`} style={{ transitionDelay: isRegister ? '0.05s' : '0s' }}>
+                        <input
+                            type="email"
+                            placeholder="email"
+                            value={email}
+                            onChange={handleEmailChange}
+                            className={getInputClass('email', email)}
+                            tabIndex={isRegister ? 0 : -1}
+                        />
+                        {getErrMsg('email', email) && <p className="field-error">{getErrMsg('email', email)}</p>}
+                    </div>
+
+                    <div className={`auth-field auth-field--slide${!isRegister ? ' visible' : ''}`}>
+                        <input
+                            placeholder="username or email"
+                            value={emailOrUsername}
+                            onChange={e => { setEmailOrUsername(e.target.value); clearFieldState('login'); }}
+                            className={getInputClass('login', emailOrUsername)}
+                            tabIndex={isRegister ? -1 : 0}
+                        />
+                        {getErrMsg('login', emailOrUsername) && <p className="field-error">{getErrMsg('login', emailOrUsername)}</p>}
+                    </div>
+
+                    <div className="auth-field">
+                        <div className="password-field">
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="password"
+                                value={password}
+                                onChange={isRegister ? handlePasswordChange : e => setPassword(e.target.value)}
+                                className={isRegister ? getInputClass('password', password) : (submitted && !password ? 'error' : '')}
+                            />
+                            <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
+                                {showPassword ? '✶' : '✧'}
+                            </button>
+                            {isRegister && getErrMsg('password', password) && <p className="field-error">{getErrMsg('password', password)}</p>}
+                        </div>
+                    </div>
+
+                    <button type="submit" className="auth-submit">
+                        {isRegister ? 'create account' : 'sign in'}
+                    </button>
+                </form>
+
+                <button className="auth-link" onClick={() => setAuthMode(isRegister ? 'login' : 'register')}>
+                    {isRegister ? 'back to sign in' : 'or sign up'}
                 </button>
-            </form>
-
-            <button className="auth-link" onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}>
-                {authMode === 'login' ? 'or sign up' : 'back to login'}
-            </button>
+            </div>
         </div>
     );
 };

@@ -175,19 +175,7 @@ export const AppProvider = ({ children }) => {
         goHome();
     }, [goHome]);
 
-    const goPractice = useCallback(async () => {
-        const res = await fetch('http://localhost:8080/graphql', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ query: `{ randomProblem(difficulty: EASY) { id title difficulty type files { filePath fileName fileRole } } }` }),
-        });
-        const data = await res.json();
-        const problem = data.data?.randomProblem;
-        if (!problem) return;
-
-        const descFile = problem.files.find(f => f.fileRole === 'DESCRIPTION');
-        const templateFile = problem.files.find(f => f.fileRole === 'TEMPLATE');
-
+    const loadProblem = useCallback(async (problem) => {
         const fetchFile = async (path) => {
             const r = await fetch('http://localhost:8080/graphql', {
                 method: 'POST',
@@ -196,14 +184,30 @@ export const AppProvider = ({ children }) => {
             });
             return (await r.json()).data?.fileContent ?? '';
         };
-
+        const descFile = problem.files.find(f => f.fileRole === 'DESCRIPTION');
+        const templateFile = problem.files.find(f => f.fileRole === 'TEMPLATE');
         const description = descFile ? await fetchFile(descFile.filePath) : '';
         const template = templateFile ? await fetchFile(templateFile.filePath) : '';
-
         setCurrentProblem({ ...problem, description });
         setEditorContent(template);
-        navigate('/practice');
+        navigate('/solve');
     }, [navigate, token]);
+
+    const goPractice = useCallback(() => {
+        navigate('/practice');
+    }, [navigate]);
+
+    const goPracticeById = useCallback(async (id) => {
+        const res = await fetch('http://localhost:8080/graphql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ query: `{ problemById(id: "${id}") { id title difficulty type files { filePath fileName fileRole } } }` }),
+        });
+        const data = await res.json();
+        const problem = data.data?.problemById;
+        if (!problem) return;
+        await loadProblem(problem);
+    }, [token, loadProblem]);
 
     const handleSubmit = useCallback(async () => {
         if (!currentUser || !currentProblem) return;
@@ -290,6 +294,7 @@ export const AppProvider = ({ children }) => {
         register,
         logout,
         goPractice,
+        goPracticeById,
         authMode,
         setAuthMode,
         error,

@@ -10,6 +10,7 @@ import AuthPage from './pages/Auth/Auth';
 import ProfilePage from './pages/Profile/Profile';
 import SettingsPage from './pages/Settings/Settings';
 import PracticePage from './pages/Practice/Practice';
+import ProblemsPage from './pages/Problems/Problems';
 
 const ProtectedRoute = ({ children }) => {
     const { currentUser } = useContext(AppContext);
@@ -29,7 +30,8 @@ function App() {
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-                <Route path="/practice" element={<ProtectedRoute><PracticePage /></ProtectedRoute>} />
+                <Route path="/solve" element={<ProtectedRoute><PracticePage /></ProtectedRoute>} />
+                <Route path="/practice" element={<ProtectedRoute><ProblemsPage /></ProtectedRoute>} />
             </Routes>
         </div>
     );

@@ -2,6 +2,7 @@ import React, { useContext, useState, useRef, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import ReactMarkdown from 'react-markdown';
+import { JavaOriginal } from 'devicons-react';
 import { AppContext } from '../../context/AppContext';
 import Spinner from '../../components/Spinner/Spinner';
 import './Practice.css';
@@ -38,7 +39,7 @@ const SubmissionResult = ({ result }) => {
     const runTime = parseRunTime(result.stdout);
 
     return (
-        <div className="result-card">
+        <div className="result-card" style={{ borderColor: color }}>
             <div className="result-status" style={{ color }}>
                 {result.status.replace(/_/g, ' ')}
             </div>
@@ -76,7 +77,7 @@ const PracticePage = () => {
         handleRun,
     } = useContext(AppContext);
 
-    const [terminalHeight, setTerminalHeight] = useState(200);
+    const [terminalHeight, setTerminalHeight] = useState(260);
     const [isDragging, setIsDragging] = useState(false);
     const startYRef = useRef(0);
     const startHeightRef = useRef(0);
@@ -115,19 +116,17 @@ const PracticePage = () => {
                     <button className="practice-tab active">description</button>
                     <button className="practice-tab">submissions</button>
                 </div>
-                <div className="practice-actions">
-                    <select className="practice-lang"><option>java</option></select>
-                    <button className="practice-run" onClick={handleRun}>run</button>
-                    <button className="practice-submit" onClick={handleSubmit}>submit</button>
-                </div>
             </div>
             <div className="practice-body">
                 <div className="practice-left">
                     <div className="practice-problem-header">
                         <p className="practice-problem-title">{currentProblem?.title}</p>
                         <div className="practice-badges">
-                            <span className={`practice-diff ${diff}`}>{diff}</span>
-                            <span className="practice-type">{currentProblem?.type?.toLowerCase()}</span>
+                            <span className="practice-diff-stars" title={diff}>
+                                {['easy', 'medium', 'hard'].map((d, i) => (
+                                    <span key={i} className={`star ${i < { easy: 1, medium: 2, hard: 3 }[diff] ? `filled ${diff}` : ''}`}>★</span>
+                                ))}
+                            </span>
                         </div>
                     </div>
                     <div className="practice-desc"><ReactMarkdown>{description}</ReactMarkdown></div>
@@ -135,6 +134,14 @@ const PracticePage = () => {
                 <div className="practice-right">
                     <div className="practice-editor-bar">
                         <span className="practice-editor-label">solution.java</span>
+                        <div className="practice-actions">
+                            <div className="practice-lang">
+                                <JavaOriginal size={18} />
+                                <span>java</span>
+                            </div>
+                            <button className="practice-run" onClick={handleRun}>run</button>
+                            <button className="practice-submit" onClick={handleSubmit}>submit</button>
+                        </div>
                     </div>
                     <div className="practice-editor-wrap">
                         <div className="editor-terminal-container">

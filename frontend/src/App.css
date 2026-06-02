@@ -1,9 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap');
 
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+button, input, select, textarea {
+  outline: none;
+}
+
+button:focus, button:focus-visible,
+input:focus, input:focus-visible {
+  outline: none;
 }
 
 :root {
@@ -12,26 +21,34 @@
   --text: #f0f0f0;
   --text-muted: #bbb;
   --accent: #fff;
+  --accent-text: #111;
   --error: #e05252;
   --success: #4caf50;
-  --font: 'JetBrains Mono', monospace;
+  --font: 'Space Grotesk', sans-serif;
   --surface: #4a4e51;
+  --diff-easy: #4caf50;
+  --diff-medium: #ff9800;
+  --diff-hard: #f44336;
+  font-size: 15px;
 }
 
 body[data-theme='light'] {
-  --bg: #d8dadc;
-  --border: #424247;
-  --text: #0f172a;
-  --text-muted: #64748b;
-  --accent: #334155;
-  --surface: #eaebed;
+  --bg: #dde4f0;
+  --border: #b8c4d8;
+  --text: #1a2540;
+  --text-muted: #5a6a8a;
+  --accent: #0b2ee0;
+  --accent-text: #fff;
+  --surface: #e8edf5;
+  --diff-easy: #5abf5a;
+  --diff-medium: #ab821b;
+  --diff-hard: #a13564;
 }
 
 body {
   background-color: var(--bg);
   color: var(--text);
   font-family: var(--font);
-  font-size: 19px;
   min-height: 100vh;
   transition: background-color 0.3s, color 0.3s;
 }
@@ -50,12 +67,12 @@ body {
   align-items: center;
   justify-content: center;
   height: 100vh;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-muted);
 }
 
 .spinner-inline {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-muted);
 }
 
@@ -70,14 +87,14 @@ body {
 
 .compete-btn {
   padding: 14px 40px;
-  font-size: 19px;
+  font-size: 1.1875rem;
   letter-spacing: 0.2em;
   text-transform: lowercase;
 }
 
 .auth-submit {
   padding: 10px 20px;
-  font-size: 17px;
+  font-size: 1.0625rem;
   letter-spacing: 0.15em;
   text-transform: lowercase;
   margin-top: 8px;
@@ -128,7 +145,7 @@ body[data-theme='dark'] .auth-submit:focus {
 }
 
 .auth-label {
-  font-size: 15px;
+  font-size: 0.9375rem;
   letter-spacing: 0.15em;
   color: var(--text-muted);
   margin-bottom: 4px;
@@ -172,7 +189,7 @@ body[data-theme='dark'] .auth-submit:focus {
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 19px;
+  font-size: 1.1875rem;
 }
 
 .password-toggle:hover {
@@ -185,7 +202,7 @@ body[data-theme='dark'] .auth-submit:focus {
   border: 1px solid var(--border);
   color: var(--text);
   font-family: var(--font);
-  font-size: 18px;
+  font-size: 1.125rem;
   padding: 10px 14px;
   outline: none;
   transition: border-color 0.2s;
@@ -215,7 +232,7 @@ input[type="password"], input[type="text"] {
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
   font-family: var(--font);
   letter-spacing: 0.05em;
@@ -238,7 +255,7 @@ body[data-theme='dark'] .auth-link:hover {
   transform: translateY(-50%);
   margin-left: 16px;
   color: var(--error);
-  font-size: 14px;
+  font-size: 0.875rem;
   letter-spacing: 0.05em;
   white-space: nowrap;
 }
@@ -250,7 +267,7 @@ body[data-theme='dark'] .auth-link:hover {
   transform: translateY(-50%);
   margin-left: 16px;
   color: var(--success);
-  font-size: 14px;
+  font-size: 0.875rem;
   letter-spacing: 0.05em;
   white-space: nowrap;
 }
@@ -296,7 +313,7 @@ body[data-theme='dark'] .auth-link:hover {
 }
 
 .profile-initials {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 500;
   color: var(--text-muted);
   letter-spacing: 0.05em;
@@ -311,7 +328,7 @@ body[data-theme='dark'] .auth-link:hover {
 .profile-username {
   margin: 0;
 
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 500;
 
   color: var(--text);
@@ -321,7 +338,7 @@ body[data-theme='dark'] .auth-link:hover {
 .profile-score {
   margin: 0;
 
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-muted);
   letter-spacing: 0.15em;
 }
@@ -340,7 +357,7 @@ body[data-theme='dark'] .auth-link:hover {
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
 
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .profile-label {
@@ -356,7 +373,7 @@ body[data-theme='dark'] .auth-link:hover {
 .profile-section-title {
   margin: 0 0 16px;
 
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-muted);
   letter-spacing: 0.25em;
   text-transform: lowercase;
@@ -387,13 +404,13 @@ body[data-theme='dark'] .auth-link:hover {
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-muted);
   letter-spacing: 0.15em;
 }
 
 .stat-value {
-  font-size: 28px;
+  font-size: 1.75rem;
   color: var(--text);
   line-height: 1;
 }
@@ -421,7 +438,7 @@ body[data-theme='dark'] .auth-link:hover {
 .profile-empty {
   margin: 0;
 
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--text-muted);
   letter-spacing: 0.05em;
 }
@@ -481,7 +498,7 @@ body[data-theme='dark'] .auth-link:hover {
 
     font-family: var(--font);
 
-    font-size: 22px;
+    font-size: 1.375rem;
     font-weight: 300;
 
     letter-spacing: 0.04em;
@@ -536,7 +553,7 @@ body[data-theme='dark'] .dashboard-command:hover {
     border: 1px solid var(--border);
     color: var(--text);
     font-family: var(--font);
-    font-size: 18px;
+    font-size: 1.125rem;
     padding: 10px 14px;
     outline: none;
     transition: border-color 0.2s;
@@ -552,7 +569,7 @@ body[data-theme='dark'] .dashboard-command:hover {
 
 .practice-page {
     height: 100vh;
-    padding-top: 50px;
+    padding-top: 36px;
     display: flex;
     flex-direction: column;
     font-family: var(--font);
@@ -577,7 +594,7 @@ body[data-theme='dark'] .dashboard-command:hover {
     border: none;
     color: var(--text-muted);
     font-family: var(--font);
-    font-size: 12px;
+    font-size: 0.75rem;
     letter-spacing: 0.1em;
     padding: 6px 14px;
     cursor: pointer;
@@ -605,7 +622,7 @@ body[data-theme='dark'] .dashboard-command:hover {
     border: none;
     color: var(--text-muted);
     font-family: var(--font);
-    font-size: 11px;
+    font-size: 0.6875rem;
     padding: 6px 12px;
     cursor: pointer;
     letter-spacing: 0.08em;
@@ -622,7 +639,7 @@ body[data-theme='dark'] .dashboard-command:hover {
     border: none;
     color: var(--text-muted);
     font-family: var(--font);
-    font-size: 11px;
+    font-size: 0.6875rem;
     padding: 6px 16px;
     cursor: pointer;
     letter-spacing: 0.1em;
@@ -639,7 +656,7 @@ body[data-theme='dark'] .dashboard-command:hover {
     border: 0.5px solid #4caf50;
     color: #4caf50;
     font-family: var(--font);
-    font-size: 11px;
+    font-size: 0.6875rem;
     padding: 6px 16px;
     cursor: pointer;
     letter-spacing: 0.1em;
@@ -671,11 +688,10 @@ body[data-theme='dark'] .dashboard-command:hover {
 
 .practice-problem-header {
     padding: 20px 20px 14px;
-    border-bottom: 0.5px solid var(--bg);
 }
 
 .practice-problem-title {
-    font-size: 15px;
+    font-size: 0.9375rem;
     color: var(--text);
     letter-spacing: 0.06em;
     margin-bottom: 10px;
@@ -687,7 +703,7 @@ body[data-theme='dark'] .dashboard-command:hover {
 }
 
 .practice-diff {
-    font-size: 10px;
+    font-size: 0.625rem;
     letter-spacing: 0.15em;
     padding: 2px 8px;
     border: 0.5px solid;
@@ -699,7 +715,7 @@ body[data-theme='dark'] .dashboard-command:hover {
 .practice-diff.hard { color: #f44336; border-color: #f44336; }
 
 .practice-type {
-    font-size: 10px;
+    font-size: 0.625rem;
     letter-spacing: 0.15em;
     padding: 2px 8px;
     border: 0.5px solid var(--text-muted);
@@ -711,7 +727,7 @@ body[data-theme='dark'] .dashboard-command:hover {
     padding: 20px;
     overflow-y: auto;
     flex: 1;
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: var(--text-muted);
     line-height: 1.9;
     letter-spacing: 0.02em;
@@ -725,7 +741,7 @@ body[data-theme='dark'] .dashboard-command:hover {
     background: var(--bg);
     padding: 1px 6px;
     font-family: var(--font);
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--text);
     border-radius: 3px;
 }
@@ -749,7 +765,7 @@ body[data-theme='dark'] .dashboard-command:hover {
 }
 
 .practice-editor-label {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--text-muted);
     letter-spacing: 0.1em;
 }
@@ -782,7 +798,7 @@ body[data-theme='dark'] .dashboard-command:hover {
 }
 
 .terminal-content {
-    font-size: 12px;
+    font-size: 0.75rem;
     padding: 10px;
     color: var(--text);
     overflow: auto;
@@ -793,7 +809,7 @@ body[data-theme='dark'] .dashboard-command:hover {
     justify-content: space-between;
     padding: 6px 10px;
     border-bottom: 1px solid var(--border);
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--text-muted);
 }
 

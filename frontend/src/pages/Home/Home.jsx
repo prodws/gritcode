@@ -6,37 +6,22 @@ const HomePage = () => {
     const { currentUser, goPractice } = useContext(AppContext);
     const navigate = useNavigate();
 
-    if (!currentUser) {
-        return (
-            <div className="home-container">
-                <h1 className="landing-title">
-                    appname
-                </h1>
-                <button
-                    className="compete-btn"
-                    onClick={() => navigate('/auth')}
-                >
-                    compete
-                </button>
-            </div>
-        );
+    if (currentUser) {
+        navigate('/practice');
+        return null;
     }
 
     return (
-        <div className="dashboard-container">
-            <div className="dashboard-inner">
-                <div className="dashboard-actions">
-                    <button className="dashboard-command" onClick={goPractice}>
-                        practice
-                    </button>
-                    <button className="dashboard-command">
-                        create room
-                    </button>
-                    <button className="dashboard-command">
-                        join room
-                    </button>
-                </div>
-            </div>
+        <div className="home-container">
+            <h1 className="landing-title">
+                appname
+            </h1>
+            <button
+                className="compete-btn"
+                onClick={() => navigate('/auth')}
+            >
+                compete
+            </button>
         </div>
     );
 };

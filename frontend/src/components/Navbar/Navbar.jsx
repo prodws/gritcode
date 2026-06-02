@@ -35,8 +35,8 @@ const Navbar = () => {
                 </button>
                 {currentUser ? (
                     <div style={{ position: 'relative' }}>
-                        <button className="navbar-link" onClick={() => handleNavigation('/profile')} onContextMenu={handleContextMenu}>
-                            {currentUser.username}
+                        <button className="navbar-avatar" onClick={() => handleNavigation('/profile')} onContextMenu={handleContextMenu}>
+                            {currentUser.username[0].toUpperCase()}
                         </button>
                         {showMenu && (
                             <div className="user-menu">
