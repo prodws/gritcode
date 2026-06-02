@@ -11,6 +11,9 @@ import java.util.Optional;
 @Repository
 public interface ProblemRepository extends JpaRepository<Problem, Long> {
     
+    @Query("SELECT DISTINCT p FROM Problem p LEFT JOIN FETCH p.files")
+    List<Problem> findAllWithFiles();
+
     @Query("SELECT p FROM Problem p LEFT JOIN FETCH p.files WHERE p.id = :id")
     Optional<Problem> findByIdWithFiles(@Param("id") Long id);
     

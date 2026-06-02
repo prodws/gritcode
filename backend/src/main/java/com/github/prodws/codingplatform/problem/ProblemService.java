@@ -15,7 +15,7 @@ public class ProblemService {
     private final ProblemRepository problemRepository;
 
     public List<Problem> getProblems() {
-        return problemRepository.findAll();
+        return problemRepository.findAllWithFiles();
     }
 
     public Problem getProblemById(Long id) {

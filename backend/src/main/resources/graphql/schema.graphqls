@@ -1,5 +1,6 @@
 type Query {
     problems: [Problem!]!
+    problemById(id: ID!): Problem
     userByUsername(username: String!): User
     randomProblem(difficulty: ProblemDifficulty!): Problem
     me: User

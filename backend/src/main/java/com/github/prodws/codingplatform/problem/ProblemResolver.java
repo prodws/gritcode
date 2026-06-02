@@ -27,6 +27,11 @@ public class ProblemResolver {
     }
 
     @QueryMapping
+    public Problem problemById(@Argument String id) {
+        return problemService.getProblemById(Long.parseLong(id));
+    }
+
+    @QueryMapping
     public Problem randomProblem(@Argument ProblemDifficulty difficulty) {
         return problemService.getRandomProblemByDifficulty(difficulty);
     }
