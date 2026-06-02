@@ -20,6 +20,7 @@ export const AppProvider = ({ children }) => {
     const [editorContent, setEditorContent] = useState('');
     const [submissionResult, setSubmissionResult] = useState(null);
     const [submissionLoading, setSubmissionLoading] = useState(false);
+    const [submissions, setSubmissions] = useState([]);
     const [availability, setAvailability] = useState({});
 
     // Logic
@@ -234,6 +235,17 @@ export const AppProvider = ({ children }) => {
         setSubmissionLoading(false);
     }, [token, currentUser, currentProblem, editorContent]);
 
+    const fetchSubmissions = useCallback(async () => {
+        if (!token) return;
+        const res = await fetch('http://localhost:8080/graphql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ query: `{ mySubmissions { id status passed code problem { title } } }` }),
+        });
+        const data = await res.json();
+        if (data.data?.mySubmissions) setSubmissions(data.data.mySubmissions);
+    }, [token]);
+
     const toggleTheme = useCallback(() => {
         setTheme(currentTheme => (currentTheme === 'dark' ? 'light' : 'dark'));
     }, []);
@@ -294,6 +306,8 @@ export const AppProvider = ({ children }) => {
         handleSubmit,
         handleRun,
         submissionLoading,
+        submissions,
+        fetchSubmissions,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

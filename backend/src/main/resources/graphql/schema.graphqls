@@ -3,6 +3,7 @@ type Query {
     userByUsername(username: String!): User
     randomProblem(difficulty: ProblemDifficulty!): Problem
     me: User
+    mySubmissions: [Submission!]!
     fileContent(path: String!): String!
     checkAvailability(field: String!, value: String!): Boolean!
 }

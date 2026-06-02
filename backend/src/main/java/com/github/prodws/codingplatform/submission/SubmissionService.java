@@ -3,6 +3,7 @@ package com.github.prodws.codingplatform.submission;
 import com.github.prodws.codingplatform.problem.*;
 import com.github.prodws.codingplatform.user.User;
 import com.github.prodws.codingplatform.user.UserRepository;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -73,6 +74,10 @@ public class SubmissionService {
                     false
             );
         }
+    }
+
+    public List<Submission> getSubmissionsByUser(Long userId) {
+        return submissionRepository.findAllByUserId(userId);
     }
 
     public Submission saveSubmission(Long userId, Long problemId, String code, ExecutionResult result) {
