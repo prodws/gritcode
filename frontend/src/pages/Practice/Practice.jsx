@@ -77,6 +77,8 @@ const PracticePage = () => {
         handleRun,
     } = useContext(AppContext);
 
+    const monacoTheme = theme === 'dark' ? 'dark-surface' : 'light-surface';
+
     const [terminalHeight, setTerminalHeight] = useState(180);
     const [isDragging, setIsDragging] = useState(false);
     const startYRef = useRef(0);
@@ -154,7 +156,7 @@ const PracticePage = () => {
                                     height="100%"
                                     defaultLanguage="java"
                                     value={editorContent}
-                                    theme={theme === 'dark' ? 'dark-surface' : 'light-surface'}
+                                    theme={monacoTheme}
                                     onChange={(v) => setEditorContent(v || '')}
                                     options={{ renderLineHighlight: 'none' }}
                                 />

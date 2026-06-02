@@ -111,14 +111,13 @@ body[data-theme='light'] .filter-bar-tag.active {
   box-shadow: 0 0 8px rgba(30, 102, 245, 0.25);
 }
 
+
+
 body[data-theme='light'] .practice-left,
 body[data-theme='light'] .practice-right {
   box-shadow: 0 4px 20px rgba(76, 79, 105, 0.08);
 }
 
-body[data-theme='light'] .terminal-panel {
-  background: #dde1eb;
-}
 
 body[data-theme='light'] .practice-topbar {
   border-bottom-color: var(--border);

@@ -190,6 +190,7 @@ export const AppProvider = ({ children }) => {
         const template = templateFile ? await fetchFile(templateFile.filePath) : '';
         setCurrentProblem({ ...problem, description });
         setEditorContent(template);
+        setSubmissionResult(null);
         navigate('/solve');
     }, [navigate, token]);
 
@@ -244,7 +245,7 @@ export const AppProvider = ({ children }) => {
         const res = await fetch('http://localhost:8080/graphql', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ query: `{ mySubmissions { id status passed code problem { title } } }` }),
+            body: JSON.stringify({ query: `{ mySubmissions { id status passed code createdAt problem { id title difficulty } } }` }),
         });
         const data = await res.json();
         if (data.data?.mySubmissions) setSubmissions(data.data.mySubmissions);
