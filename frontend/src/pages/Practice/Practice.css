@@ -174,6 +174,82 @@
     letter-spacing: 0.02em;
 }
 
+.practice-subs {
+    padding: 12px 20px 20px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.practice-subs-empty {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    text-align: center;
+    padding: 32px 0;
+    letter-spacing: 0.04em;
+}
+
+.practice-sub-row {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.practice-sub-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.12s;
+}
+
+.practice-sub-head:hover {
+    background: color-mix(in srgb, var(--text) 4%, var(--bg));
+}
+
+.practice-sub-num {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    min-width: 28px;
+    font-variant-numeric: tabular-nums;
+}
+
+.practice-sub-status {
+    flex: 1;
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+}
+
+.practice-sub-date {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+}
+
+.practice-sub-chev {
+    font-size: 0.5rem;
+    color: var(--text-muted);
+}
+
+.practice-sub-code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.7rem;
+    color: var(--text);
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    overflow-x: auto;
+    white-space: pre;
+    margin: 0;
+    background: var(--bg);
+    line-height: 1.6;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
 .practice-desc h1,
 .practice-desc h2,
 .practice-desc h3 {

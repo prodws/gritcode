@@ -75,7 +75,14 @@ const PracticePage = () => {
         submissionLoading,
         handleSubmit,
         handleRun,
+        submissions,
+        fetchSubmissions,
     } = useContext(AppContext);
+
+    const [activeTab, setActiveTab] = useState('description');
+    const [expandedSub, setExpandedSub] = useState(null);
+
+    useEffect(() => { fetchSubmissions(); }, [fetchSubmissions, submissionResult]);
 
     const monacoTheme = theme === 'dark' ? 'dark-surface' : 'light-surface';
 
@@ -115,23 +122,65 @@ const PracticePage = () => {
         <div className="practice-page">
             <div className="practice-topbar">
                 <div className="practice-tabs">
-                    <button className="practice-tab active">description</button>
-                    <button className="practice-tab">submissions</button>
+                    <button
+                        className={`practice-tab ${activeTab === 'description' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('description')}
+                    >description</button>
+                    <button
+                        className={`practice-tab ${activeTab === 'submissions' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('submissions')}
+                    >submissions</button>
                 </div>
             </div>
             <div className="practice-body">
                 <div className="practice-left">
                     <div className="practice-problem-header">
                         <p className="practice-problem-title">{currentProblem?.title}</p>
-                        <div className="practice-badges">
-                            <span className="practice-diff-stars" title={diff}>
-                                {['easy', 'medium', 'hard'].map((d, i) => (
-                                    <span key={i} className={`star ${i < { easy: 1, medium: 2, hard: 3 }[diff] ? `filled ${diff}` : ''}`}>★</span>
-                                ))}
-                            </span>
-                        </div>
+                        {activeTab === 'description' && (
+                            <div className="practice-badges">
+                                <span className="practice-diff-stars" title={diff}>
+                                    {['easy', 'medium', 'hard'].map((d, i) => (
+                                        <span key={i} className={`star ${i < { easy: 1, medium: 2, hard: 3 }[diff] ? `filled ${diff}` : ''}`}>★</span>
+                                    ))}
+                                </span>
+                            </div>
+                        )}
                     </div>
-                    <div className="practice-desc"><ReactMarkdown>{description}</ReactMarkdown></div>
+                    {activeTab === 'description' ? (
+                        <div className="practice-desc"><ReactMarkdown>{description}</ReactMarkdown></div>
+                    ) : (
+                        <div className="practice-subs">
+                            {(() => {
+                                const mine = submissions.filter(s => s.problem?.id === currentProblem.id);
+                                if (mine.length === 0) {
+                                    return <div className="practice-subs-empty">no submissions yet for this problem</div>;
+                                }
+                                return mine.map((s, i) => {
+                                    const isOpen = expandedSub === s.id;
+                                    return (
+                                        <div key={s.id} className="practice-sub-row">
+                                            <div className="practice-sub-head" onClick={() => setExpandedSub(isOpen ? null : s.id)}>
+                                                <span className="practice-sub-num">#{mine.length - i}</span>
+                                                <span
+                                                    className="practice-sub-status"
+                                                    style={{ color: s.passed ? 'var(--success)' : 'var(--error)' }}
+                                                >
+                                                    {s.status.replace(/_/g, ' ').toLowerCase()}
+                                                </span>
+                                                {s.createdAt && (
+                                                    <span className="practice-sub-date">
+                                                        {new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                    </span>
+                                                )}
+                                                <span className="practice-sub-chev">{isOpen ? '▲' : '▼'}</span>
+                                            </div>
+                                            {isOpen && <pre className="practice-sub-code">{s.code}</pre>}
+                                        </div>
+                                    );
+                                });
+                            })()}
+                        </div>
+                    )}
                 </div>
                 <div className="practice-right">
                     <div className="practice-editor-bar">
