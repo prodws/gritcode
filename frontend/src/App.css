@@ -16,19 +16,19 @@ input:focus, input:focus-visible {
 }
 
 :root {
-  --bg: #3d4244;
-  --border: #7a7d85;
-  --text: #f0f0f0;
-  --text-muted: #bbb;
-  --accent: #fff;
-  --accent-text: #111;
-  --error: #e05252;
-  --success: #4caf50;
+  --bg: #0a0c10;
+  --border: #1e2430;
+  --text: #cdd6f4;
+  --text-muted: #6c7a96;
+  --accent: #89b4fa;
+  --accent-text: #0a0c10;
+  --error: #f38ba8;
+  --success: #a6e3a1;
   --font: 'Space Grotesk', sans-serif;
-  --surface: #4a4e51;
-  --diff-easy: #4caf50;
-  --diff-medium: #ff9800;
-  --diff-hard: #f44336;
+  --surface: #11141c;
+  --diff-easy: #7ec87e;
+  --diff-medium: #f9e2af;
+  --diff-hard: #f38ba8;
   font-size: 15px;
 }
 
@@ -51,6 +51,65 @@ body {
   font-family: var(--font);
   min-height: 100vh;
   transition: background-color 0.3s, color 0.3s;
+}
+
+body:not([data-theme='light']) {
+  background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(137, 180, 250, 0.06), transparent);
+}
+
+body:not([data-theme='light']) .quest-layout,
+body:not([data-theme='light']) .quest-wrap {
+  box-shadow: 0 0 0 1px var(--border), 0 8px 32px rgba(0,0,0,0.4);
+}
+
+body:not([data-theme='light']) .quest-detail {
+  background: linear-gradient(160deg, #12161f 0%, #0e1118 100%);
+}
+
+body:not([data-theme='light']) .quest-list {
+  background: #0d1015;
+}
+
+body:not([data-theme='light']) .problems-filter-bar {
+  background: #0f1319;
+  border-bottom-color: rgba(137,180,250,0.12);
+}
+
+body:not([data-theme='light']) .quest-row:hover {
+  background: rgba(137,180,250,0.04);
+}
+
+body:not([data-theme='light']) .quest-row.selected {
+  background: rgba(137,180,250,0.07);
+}
+
+body:not([data-theme='light']) .quest-detail-reward {
+  background: rgba(137,180,250,0.05);
+  border: 1px solid var(--border);
+}
+
+body:not([data-theme='light']) .quest-attempt-btn {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--diff-color) 40%, transparent);
+}
+
+body:not([data-theme='light']) .navbar {
+  background: rgba(10,12,16,0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+body:not([data-theme='light']) .sidebar-action:hover,
+body:not([data-theme='light']) .sidebar-action.active {
+  text-shadow: 0 0 12px var(--accent);
+}
+
+body:not([data-theme='light']) .quest-detail-desc code {
+  background: rgba(137,180,250,0.08);
+  color: var(--accent);
+}
+
+body:not([data-theme='light']) .filter-bar-tag.active {
+  box-shadow: 0 0 8px rgba(137,180,250,0.3);
 }
 
 @keyframes fadeIn {

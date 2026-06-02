@@ -12,7 +12,7 @@ loader.init().then((monaco) => {
         inherit: true,
         rules: [],
         colors: {
-            'editor.background': '#4a4e51',
+            'editor.background': '#11141c',
         },
     });
     monaco.editor.defineTheme('light-surface', {
