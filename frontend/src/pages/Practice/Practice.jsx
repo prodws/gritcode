@@ -77,7 +77,7 @@ const PracticePage = () => {
         handleRun,
     } = useContext(AppContext);
 
-    const [terminalHeight, setTerminalHeight] = useState(260);
+    const [terminalHeight, setTerminalHeight] = useState(180);
     const [isDragging, setIsDragging] = useState(false);
     const startYRef = useRef(0);
     const startHeightRef = useRef(0);

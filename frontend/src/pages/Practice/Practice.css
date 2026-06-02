@@ -1,17 +1,21 @@
 .practice-page {
     height: 100vh;
-    padding-top: 36px;
+    padding-top: 42px;
     display: flex;
     flex-direction: column;
     font-family: var(--font);
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .practice-topbar {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     padding: 0 20px;
-    height: 56px;
+    height: 48px;
     flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
 }
 
 .practice-tabs {
@@ -33,8 +37,10 @@
 }
 
 .practice-tab.active {
-    background: var(--accent);
-    color: var(--accent-text);
+    color: var(--text);
+    border-bottom: 2px solid var(--accent);
+    border-radius: 0;
+    padding-bottom: 4px;
 }
 
 .practice-tab:hover:not(.active) {
@@ -100,7 +106,7 @@
     display: flex;
     flex: 1;
     overflow: hidden;
-    padding: 12px 16px 16px;
+    padding: 16px 16px 16px;
     gap: 12px;
 }
 
@@ -108,7 +114,7 @@
     width: 35%;
     min-width: 300px;
     background: var(--surface);
-    border-radius: 10px;
+    border: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -197,7 +203,7 @@
 .practice-right {
     flex: 1;
     background: var(--surface);
-    border-radius: 10px;
+    border: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -220,47 +226,48 @@
 }
 
 .practice-editor-wrap {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+    flex: 1;
+    overflow: hidden;
 }
 
 .monaco-container {
-    flex: 1;
-    min-height: 80px;
+    overflow: hidden;
 }
 
-
 .editor-terminal-container {
+    height: 100%;
     display: flex;
     flex-direction: column;
-    height: 100%;
     position: relative;
 }
 
 .terminal-panel {
-    background: var(--surface);
+    background: color-mix(in srgb, var(--bg) 60%, var(--surface));
     border-top: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    max-width: 100%;
 }
 
 .terminal-content {
-    font-size: 0.875rem;
-    padding: 12px;
+    font-size: 0.8125rem;
+    padding: 16px 20px;
     color: var(--text);
     overflow: auto;
     height: 100%;
+    line-height: 1.7;
 }
 
 .terminal-header {
     display: flex;
     justify-content: space-between;
-    padding: 6px 10px;
+    padding: 5px 14px;
     border-bottom: 1px solid var(--border);
-    font-size: 0.6875rem;
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
     color: var(--text-muted);
+    text-transform: lowercase;
 }
 
 .terminal-toggle {
@@ -305,44 +312,52 @@
     animation: resultFade 0.3s ease;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
     border-left: 3px solid;
-    padding-left: 14px;
+    padding-left: 16px;
 }
 
 .result-status {
     font-size: 0.8125rem;
-    font-weight: 500;
-    letter-spacing: 0.05em;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
-
 
 .result-section {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 6px;
 }
 
 .result-label {
     font-size: 0.5625rem;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    opacity: 0.6;
+    letter-spacing: 0.12em;
+    opacity: 0.7;
 }
 
 .result-pre {
-    font-family: var(--font);
-    font-size: 0.8125rem;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.75rem;
     color: var(--text);
     white-space: pre;
     overflow-x: auto;
+    overflow-y: auto;
     margin: 0;
+    line-height: 1.6;
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
+    padding: 10px 14px;
+    border-radius: 6px;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .result-pre--err {
     color: var(--error);
+    background: color-mix(in srgb, var(--error) 6%, transparent);
 }
 
 .result-meta {
@@ -350,8 +365,10 @@
     gap: 16px;
     font-size: 0.75rem;
     color: var(--text-muted);
+    letter-spacing: 0.04em;
 }
 
 .result-quip {
     font-style: italic;
+    opacity: 0.7;
 }
