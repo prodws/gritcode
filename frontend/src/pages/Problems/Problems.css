@@ -69,6 +69,164 @@ body:not([data-theme='light']) .sidebar-action.active {
     color: var(--text-muted);
 }
 
+.room-panel {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 40px;
+}
+
+.room-panel-lobby {
+    padding: 0;
+    overflow: hidden;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+}
+
+.room-loading {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+    text-align: center;
+    padding: 40px 0;
+}
+
+.room-panel-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.room-title {
+    font-size: 1.1rem;
+    color: var(--text);
+    letter-spacing: 0.15em;
+    text-transform: lowercase;
+    margin-bottom: 28px;
+    font-weight: 500;
+}
+
+.room-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 360px;
+}
+
+.room-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+.room-field span {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    letter-spacing: 0.06em;
+    text-transform: lowercase;
+}
+
+.room-field input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 0.875rem;
+    padding: 6px 12px;
+    border-radius: 5px;
+    width: 80px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color-scheme: dark light;
+    accent-color: var(--accent);
+}
+
+body[data-theme='light'] .room-field input {
+    color-scheme: light;
+}
+
+body:not([data-theme='light']) .room-field input {
+    color-scheme: dark;
+}
+
+.room-field input:focus {
+    border-color: var(--accent);
+    outline: none;
+}
+
+.room-submit {
+    margin-top: 14px;
+    background: var(--accent);
+    border: none;
+    color: var(--accent-text);
+    font-family: var(--font);
+    font-size: 0.875rem;
+    letter-spacing: 0.15em;
+    padding: 10px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-transform: lowercase;
+    transition: opacity 0.15s;
+}
+
+.room-submit:hover { opacity: 0.9; }
+.room-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.room-error {
+    color: var(--error);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    padding: 4px 0;
+}
+
+.room-join-card {
+    padding: 48px 56px;
+    max-width: 520px;
+    width: 100%;
+}
+
+.room-join-label {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+    text-transform: lowercase;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.room-join-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.room-join-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 1rem;
+    letter-spacing: 0.12em;
+    padding: 10px 14px;
+    border-radius: 6px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.room-join-input:focus {
+    border-color: var(--accent);
+    outline: none;
+}
+
 .problems-placeholder span:first-child {
     font-size: 1rem;
     letter-spacing: 0.08em;
@@ -190,6 +348,7 @@ body:not([data-theme='light']) .sidebar-action.active {
     gap: 0;
     border: 1px solid var(--border);
     border-radius: 10px;
+    background: var(--bg);
 }
 
 .problems-filter-bar {

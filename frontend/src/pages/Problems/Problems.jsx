@@ -1,8 +1,12 @@
 import React, { useContext, useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { JavaOriginal } from 'devicons-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeClosed, Shuffle } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
+import { createGame, joinGameByCode } from '../../game/api';
+import LobbyView from '../Lobby/LobbyView';
+import '../Lobby/Lobby.css';
 import './Problems.css';
 
 const DIFF_COLOR = {
@@ -69,9 +73,106 @@ const DiffStars = ({ difficulty }) => (
     </span>
 );
 
+const CreateRoomPanel = ({ token, onClose }) => {
+    const [createdGameId, setCreatedGameId] = useState(null);
+    const [err, setErr] = useState(null);
+    const createdRef = useRef(false);
+
+    useEffect(() => {
+        if (createdRef.current) return;
+        createdRef.current = true;
+        createGame(token, {
+            maxTeams: 2,
+            maxPlayersPerTeam: 1,
+            problemCount: 1,
+            timeLimitSeconds: 120,
+        })
+            .then(g => setCreatedGameId(g.id))
+            .catch(e => {
+                console.error('createGame failed:', e);
+                setErr(e.message || String(e));
+            });
+    }, [token]);
+
+    if (err) return <div className="room-panel"><div className="room-error">{err}</div></div>;
+    if (!createdGameId) return <div className="room-panel"><div className="room-loading">creating room...</div></div>;
+
+    return (
+        <div className="room-panel room-panel-lobby">
+            <LobbyView gameId={createdGameId} onLeave={onClose} />
+        </div>
+    );
+};
+
+const JoinRoomPanel = ({ token, onClose }) => {
+    const [code, setCode] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState(null);
+    const [joinedGameId, setJoinedGameId] = useState(null);
+
+    const handleJoin = async (e) => {
+        e?.preventDefault?.();
+        if (!code.trim()) return;
+        setBusy(true);
+        setErr(null);
+        try {
+            const game = await joinGameByCode(token, code.trim());
+            setJoinedGameId(game.id);
+        } catch (ex) {
+            setErr(ex.message);
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    if (joinedGameId) {
+        return (
+            <div className="room-panel room-panel-lobby">
+                <LobbyView gameId={joinedGameId} onLeave={() => { setJoinedGameId(null); setCode(''); }} />
+            </div>
+        );
+    }
+
+    return (
+        <div className="room-panel room-panel-center">
+            <div className="room-join-card">
+                <p className="room-join-label">paste a link / code to the game</p>
+                <form className="room-join-row" onSubmit={handleJoin}>
+                    <input
+                        className="room-join-input"
+                        type="text"
+                        value={code}
+                        onChange={e => setCode(e.target.value.toUpperCase())}
+                        placeholder="e.g. AB12CD"
+                        autoFocus
+                    />
+                    <button className="room-submit" disabled={busy} type="submit">
+                        {busy ? 'joining...' : 'join'}
+                    </button>
+                </form>
+                {err && <div className="room-error">{err}</div>}
+            </div>
+        </div>
+    );
+};
+
+const PATH_TO_VIEW = {
+    '/practice': 'problems',
+    '/host': 'create-room',
+    '/join': 'join-room',
+};
+const VIEW_TO_PATH = {
+    'problems': '/practice',
+    'create-room': '/host',
+    'join-room': '/join',
+};
+
 const ProblemsPage = () => {
-    const { token, goPracticeById } = useContext(AppContext);
-    const [view, setView] = useState('problems');
+    const { token, goPracticeById, guardedNavigate } = useContext(AppContext);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const view = PATH_TO_VIEW[location.pathname] ?? 'problems';
+    const setView = (next) => guardedNavigate(VIEW_TO_PATH[next] ?? '/practice');
     const [problems, setProblems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [sortDir, setSortDir] = useState(() => localStorage.getItem('problems-sortdir') ?? 'asc');
@@ -191,12 +292,8 @@ const ProblemsPage = () => {
     return (
         <div className="problems-page">
             <div className="problems-main">
-                {view !== 'problems' && (
-                    <div className="problems-placeholder">
-                        <span>{view === 'create-room' ? 'create room' : 'join room'}</span>
-                        <span className="placeholder-sub">coming soon</span>
-                    </div>
-                )}
+                {view === 'create-room' && <CreateRoomPanel token={token} onClose={() => setView('problems')} />}
+                {view === 'join-room' && <JoinRoomPanel token={token} onClose={() => setView('problems')} />}
                 {view === 'problems' && (
                     <div className="quest-wrap">
                         <div className="problems-filter-bar">
