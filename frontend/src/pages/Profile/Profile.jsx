@@ -1,5 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
+import { myFinishedGames } from '../../game/api';
 import './Profile.css';
 
 const DIFF_COLOR = {
@@ -52,8 +54,15 @@ const ProfilePage = () => {
     const [expandedProblem, setExpandedProblem] = useState(null);
     const [expandedSub, setExpandedSub] = useState(null);
     const [allProblems, setAllProblems] = useState([]);
+    const [games, setGames] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(() => { fetchSubmissions(); }, [fetchSubmissions]);
+
+    useEffect(() => {
+        if (!token) return;
+        myFinishedGames(token).then(setGames).catch(() => setGames([]));
+    }, [token]);
 
     useEffect(() => {
         if (!token) return;
@@ -263,6 +272,44 @@ const ProfilePage = () => {
                                                 ))}
                                             </div>
                                         )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                <div className="profile-submissions">
+                    <hr className="profile-divider submissions-divider" />
+                    <p className="profile-section-title">games</p>
+                    {games.length === 0 ? (
+                        <div className="profile-empty-box">
+                            <p className="profile-empty">no games played yet</p>
+                        </div>
+                    ) : (
+                        <div className="games-list">
+                            {games.map(g => {
+                                const myTeam = g.teams.find(t => t.players.some(p => p.player.id === currentUser?.id));
+                                const noWinner = !g.teams.some(t => t.isWinner);
+                                const won = myTeam?.isWinner;
+                                const opponents = g.teams.filter(t => t.id !== myTeam?.id);
+                                const layout = `${myTeam?.players.length ?? 0}v${opponents.map(t => t.players.length).join('v')}`;
+                                const date = g.endedAt ? new Date(g.endedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+                                const verdictClass = noWinner ? 'draw' : (won ? 'won' : 'lost');
+                                const verdictText = noWinner ? 'draw' : (won ? 'victory' : 'defeat');
+                                return (
+                                    <div key={g.id} className="games-row" onClick={() => navigate(`/game/${g.id}/results`)}>
+                                        <span className="games-layout">{layout}</span>
+                                        <span className="games-avatars">
+                                            {myTeam?.players.map(p => (
+                                                <span key={p.id} className="games-avatar">{p.player.username[0].toUpperCase()}</span>
+                                            ))}
+                                        </span>
+                                        <span className={`games-verdict ${verdictClass}`}>
+                                            {verdictText}
+                                        </span>
+                                        <span className="games-score">{myTeam?.score ?? 0}</span>
+                                        <span className="games-date">{date}</span>
                                     </div>
                                 );
                             })}

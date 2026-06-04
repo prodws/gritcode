@@ -58,7 +58,8 @@ body[data-theme='light'] {
 }
 
 body[data-theme='light'] .quest-layout,
-body[data-theme='light'] .quest-wrap {
+body[data-theme='light'] .quest-wrap,
+body[data-theme='light'] .room-panel {
   box-shadow: 0 0 0 1px var(--border), 0 12px 40px rgba(76, 79, 105, 0.14);
 }
 
@@ -111,8 +112,6 @@ body[data-theme='light'] .filter-bar-tag.active {
   box-shadow: 0 0 8px rgba(30, 102, 245, 0.25);
 }
 
-
-
 body[data-theme='light'] .practice-left,
 body[data-theme='light'] .practice-right {
   box-shadow: 0 4px 20px rgba(76, 79, 105, 0.08);
@@ -148,7 +147,8 @@ body:not([data-theme='light']) {
 }
 
 body:not([data-theme='light']) .quest-layout,
-body:not([data-theme='light']) .quest-wrap {
+body:not([data-theme='light']) .quest-wrap,
+body:not([data-theme='light']) .room-panel {
   box-shadow: 0 0 0 1px var(--border), 0 8px 32px rgba(0,0,0,0.4);
 }
 

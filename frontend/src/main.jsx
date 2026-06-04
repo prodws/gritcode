@@ -22,7 +22,8 @@ loader.init().then((monaco) => {
         colors: {
             'editor.background': '#f5f7fc',
         },
-    });});
+    });
+});
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
