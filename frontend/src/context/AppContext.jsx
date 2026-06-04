@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { validateUsername, validateEmail, validatePassword } from '../utils/validation';
 
@@ -22,6 +22,51 @@ export const AppProvider = ({ children }) => {
     const [submissionLoading, setSubmissionLoading] = useState(false);
     const [submissions, setSubmissions] = useState([]);
     const [availability, setAvailability] = useState({});
+    const [toast, setToast] = useState(null);
+    const [confirmState, setConfirmState] = useState(null);
+    const navGuardRef = useRef(null);
+
+    const showConfirm = useCallback((opts) => {
+        return new Promise((resolve) => {
+            setConfirmState({
+                title: opts.title,
+                message: opts.message,
+                confirmLabel: opts.confirmLabel || 'confirm',
+                cancelLabel: opts.cancelLabel || 'cancel',
+                kind: opts.kind || 'default',
+                resolve,
+            });
+        });
+    }, []);
+
+    const closeConfirm = useCallback((result) => {
+        if (confirmState) {
+            confirmState.resolve(result);
+            setConfirmState(null);
+        }
+    }, [confirmState]);
+
+    const setNavGuard = useCallback((fn) => { navGuardRef.current = fn; }, []);
+    const guardedNavigate = useCallback(async (to, opts) => {
+        const guard = navGuardRef.current;
+        if (guard) {
+            const allowed = await guard(to);
+            if (!allowed) return;
+        }
+        navigate(to, opts);
+    }, [navigate]);
+
+    const showToast = useCallback((message, kind = 'info') => {
+        setToast({ message, kind, id: Date.now() });
+    }, []);
+
+    const dismissToast = useCallback(() => setToast(null), []);
+
+    useEffect(() => {
+        if (!toast) return;
+        const t = setTimeout(() => setToast(null), 5000);
+        return () => clearTimeout(t);
+    }, [toast]);
 
     // Logic
     const clearError = useCallback(() => setError({ field: null, message: null }), []);
@@ -314,6 +359,14 @@ export const AppProvider = ({ children }) => {
         submissionLoading,
         submissions,
         fetchSubmissions,
+        toast,
+        showToast,
+        dismissToast,
+        setNavGuard,
+        guardedNavigate,
+        showConfirm,
+        confirmState,
+        closeConfirm,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
