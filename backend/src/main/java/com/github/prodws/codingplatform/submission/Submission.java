@@ -1,5 +1,7 @@
 package com.github.prodws.codingplatform.submission;
 
+import com.github.prodws.codingplatform.game.Game;
+import com.github.prodws.codingplatform.game.GameTeam;
 import com.github.prodws.codingplatform.problem.Problem;
 import com.github.prodws.codingplatform.user.User;
 import jakarta.persistence.*;
@@ -47,4 +49,12 @@ public class Submission {
     private long executionTimeMs;
     private long memoryUsedBytes;
     private int pointsEarned;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "game_id")
+    private Game game;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id")
+    private GameTeam team;
 }

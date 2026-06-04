@@ -101,7 +101,8 @@ public class SubmissionService {
 
 
     private CodingProblem loadCodingProblem(Long problemId) {
-        Problem problem = problemService.getProblemById(problemId);
+        Problem problem = org.hibernate.Hibernate.unproxy(
+                problemService.getProblemById(problemId), Problem.class);
         if (!(problem instanceof CodingProblem codingProblem)) {
             throw new IllegalArgumentException("Problem is not a coding problem");
         }

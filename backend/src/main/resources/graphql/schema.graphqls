@@ -7,6 +7,10 @@ type Query {
     mySubmissions: [Submission!]!
     fileContent(path: String!): String!
     checkAvailability(field: String!, value: String!): Boolean!
+    gameById(id: ID!): Game
+    gameByCode(code: String!): Game
+    myActiveGames: [Game!]!
+    myFinishedGames: [Game!]!
 }
 
 type Mutation {
@@ -25,6 +29,15 @@ type Mutation {
 
     submitSolution(input: SubmitSolutionInput!): Submission!
     runSolution(input: SubmitSolutionInput!): ExecutionResult!
+
+    createGame(input: CreateGameInput!): Game!
+    joinGameByCode(code: String!): Game!
+    updateGameSettings(gameId: ID!, maxTeams: Int, maxPlayersPerTeam: Int, problemCount: Int, timeLimitSeconds: Int): Game!
+    switchGameTeam(gameId: ID!, teamId: ID!): Game!
+    leaveGame(gameId: ID!): Game!
+    startGame(gameId: ID!): Game!
+    submitGameSolution(gameId: ID!, problemId: ID!, code: String!): Submission!
+    finishGame(gameId: ID!): Game!
 }
 
 # Output types
@@ -56,6 +69,46 @@ type Submission {
     stderr: String
     passed: Boolean!
     createdAt: String
+    game: Game
+    team: GameTeam
+}
+
+type Game {
+    id: ID!
+    status: GameStatus!
+    inviteCode: String!
+    isPractice: Boolean!
+    maxTeams: Int!
+    maxPlayersPerTeam: Int!
+    timeLimitSeconds: Int!
+    startedAt: String
+    endedAt: String
+    createdAt: String!
+    host: User!
+    teams: [GameTeam!]!
+    problems: [GameProblem!]!
+}
+
+type GameTeam {
+    id: ID!
+    teamName: String!
+    score: Int!
+    rank: Int
+    isWinner: Boolean!
+    players: [GamePlayer!]!
+}
+
+type GamePlayer {
+    id: ID!
+    player: User!
+    joinedAt: String!
+    status: GamePlayerStatusEnum!
+}
+
+type GameProblem {
+    id: ID!
+    problem: Problem!
+    sortOrder: Int!
 }
 
 
@@ -79,6 +132,13 @@ input SubmitSolutionInput {
     userId: ID!
     problemId: ID!
     solutionCode: String!
+}
+
+input CreateGameInput {
+    maxTeams: Int!
+    maxPlayersPerTeam: Int!
+    problemCount: Int!
+    timeLimitSeconds: Int!
 }
 
 input FileInput {
@@ -119,4 +179,17 @@ enum ExecutionStatus {
     SYSTEM_ERROR
     TIMEOUT
     INVALID_SUBMISSION
+}
+
+enum GameStatus {
+    WAITING
+    IN_PROGRESS
+    FINISHED
+    CANCELLED
+}
+
+enum GamePlayerStatusEnum {
+    ACTIVE
+    DISCONNECTED
+    LEFT
 }
