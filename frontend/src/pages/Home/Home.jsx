@@ -1,14 +1,13 @@
 import React, { useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
 
 const HomePage = () => {
-    const { currentUser, goPractice } = useContext(AppContext);
+    const { currentUser } = useContext(AppContext);
     const navigate = useNavigate();
 
     if (currentUser) {
-        navigate('/practice');
-        return null;
+        return <Navigate to="/practice" replace />;
     }
 
     return (

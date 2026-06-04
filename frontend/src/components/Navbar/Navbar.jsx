@@ -1,16 +1,14 @@
 import { useContext, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
 import './Navbar.css';
 
 const Navbar = () => {
-    const { currentUser, theme, toggleTheme, logout } = useContext(AppContext);
-    const navigate = useNavigate();
+    const { currentUser, theme, toggleTheme, logout, guardedNavigate } = useContext(AppContext);
     const [showMenu, setShowMenu] = useState(false);
 
     const handleNavigation = (path) => {
         setShowMenu(false);
-        navigate(path);
+        guardedNavigate(path);
     };
 
     const handleLogout = () => {

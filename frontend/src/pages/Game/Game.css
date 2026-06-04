@@ -1,0 +1,212 @@
+.game-page {
+    height: 100vh;
+    padding-top: 42px;
+    display: grid;
+    grid-template-columns: 100px 1fr 1.4fr;
+    gap: 12px;
+    padding: 50px 16px 16px;
+    box-sizing: border-box;
+    overflow: hidden;
+    font-family: var(--font);
+}
+
+.game-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    gap: 14px;
+}
+
+.game-timer {
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    letter-spacing: 0.05em;
+}
+
+.game-timer-total {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    margin-left: 2px;
+}
+
+.game-task-dots {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.game-task-dot {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, transform 0.1s;
+    font-family: var(--font);
+}
+
+.game-task-dot:hover {
+    border-color: var(--diff-color, var(--accent));
+    color: var(--diff-color, var(--accent));
+}
+
+.game-task-dot.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: scale(1.05);
+}
+
+.game-task-dot.solved {
+    background: var(--diff-color, var(--success));
+    color: var(--accent-text);
+    border-color: var(--diff-color, var(--success));
+}
+
+.game-team-info {
+    margin-top: auto;
+    text-align: center;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    width: 100%;
+}
+
+.game-team-label {
+    font-size: 0.625rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: lowercase;
+}
+
+.game-team-score {
+    font-size: 1.5rem;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+}
+
+.game-desc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 28px;
+    overflow-y: auto;
+}
+
+.game-desc-meta {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-transform: lowercase;
+    margin-bottom: 8px;
+}
+
+.game-desc-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    margin-bottom: 16px;
+}
+
+.game-desc-body {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    line-height: 1.9;
+    letter-spacing: 0.02em;
+}
+
+.game-desc-body code {
+    background: var(--bg);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    color: var(--text);
+}
+
+.game-desc-body h1,
+.game-desc-body h2,
+.game-desc-body h3 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: lowercase;
+    margin: 18px 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 0.5px solid var(--accent);
+}
+
+.game-right {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.game-editor-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 42px;
+    background: color-mix(in srgb, var(--text) 8%, var(--bg));
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.game-editor-label {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+}
+
+.game-run {
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    font-family: var(--font);
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    padding: 6px 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    text-transform: lowercase;
+    transition: opacity 0.15s;
+}
+
+.game-run:hover { opacity: 0.9; }
+.game-run:disabled { opacity: 0.5; cursor: not-allowed; }
+
+
+.game-terminal-empty {
+    color: var(--text-muted);
+    font-style: italic;
+    opacity: 0.7;
+}
+
+.game-terminal-status.pass {
+    color: var(--success);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+}
+
+.game-terminal-status.fail {
+    color: var(--error);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+}
