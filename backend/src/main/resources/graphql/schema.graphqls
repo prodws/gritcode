@@ -38,6 +38,7 @@ type Mutation {
     startGame(gameId: ID!): Game!
     submitGameSolution(gameId: ID!, problemId: ID!, code: String!): Submission!
     finishGame(gameId: ID!): Game!
+    sendChatMessage(gameId: ID!, text: String!): Boolean!
 }
 
 # Output types

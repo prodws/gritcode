@@ -75,6 +75,13 @@ public class GameResolver {
         return gameService.finalizeGameById(gameId, userId);
     }
 
+    @MutationMapping
+    public Boolean sendChatMessage(@Argument Long gameId, @Argument String text, Authentication auth) {
+        Long userId = AuthUtils.extractUserId(auth);
+        gameService.sendChat(gameId, userId, text);
+        return true;
+    }
+
     @QueryMapping
     public Game gameById(@Argument Long id) {
         return gameService.getGame(id);

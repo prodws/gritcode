@@ -323,6 +323,7 @@ public class GameService {
         submission.setTeam(player.getTeam());
         Submission saved = submissionRepository.save(submission);
 
+        int pointsAwarded = 0;
         if (result.passed()) {
             GameTeam team = teamRepository.findById(player.getTeam().getId())
                     .orElseThrow(() -> new IllegalStateException("Team not found"));
@@ -334,13 +335,44 @@ public class GameService {
                     .anyMatch(s -> s.isPassed() && !s.getId().equals(saved.getId()));
 
             if (!alreadySolved) {
-                int points = pointsForProblem(game, problemId);
-                team.setScore(team.getScore() + points);
+                pointsAwarded = pointsForProblem(game, problemId);
+                team.setScore(team.getScore() + pointsAwarded);
                 teamRepository.save(team);
             }
             checkAndFinish(game);
         }
 
+        // Find problem index (for "#N" reference) and team index (for color)
+        List<GameProblem> sortedProblems = new ArrayList<>(game.getProblems());
+        sortedProblems.sort(Comparator.comparingInt(GameProblem::getSortOrder));
+        int problemIdx = 0;
+        String problemTitle = "";
+        for (int i = 0; i < sortedProblems.size(); i++) {
+            if (sortedProblems.get(i).getProblem().getId().equals(problemId)) {
+                problemIdx = i;
+                problemTitle = sortedProblems.get(i).getProblem().getTitle();
+                break;
+            }
+        }
+        List<GameTeam> teams = new ArrayList<>(game.getTeams());
+        teams.sort(Comparator.comparing(GameTeam::getId));
+        int teamIdx = -1;
+        for (int i = 0; i < teams.size(); i++) {
+            if (teams.get(i).getId().equals(player.getTeam().getId())) {
+                teamIdx = i;
+                break;
+            }
+        }
+
+        eventPublisher.publishSubmissionActivity(
+                gameId,
+                player.getPlayer().getUsername(),
+                teamIdx,
+                problemTitle,
+                problemIdx,
+                result.passed(),
+                pointsAwarded
+        );
         eventPublisher.publishStateChanged(gameId);
         return saved;
     }
@@ -441,5 +473,32 @@ public class GameService {
     private int clamp(Integer value, int min, int max, int fallback) {
         if (value == null) return fallback;
         return Math.max(min, Math.min(max, value));
+    }
+
+    public void sendChat(Long gameId, Long userId, String rawText) {
+        String text = rawText == null ? "" : rawText.trim();
+        if (text.isEmpty()) return;
+        if (text.length() > 500) text = text.substring(0, 500);
+
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new IllegalArgumentException("Game not found"));
+        if (game.getStatus() == GameStatus.CANCELLED || game.getStatus() == GameStatus.FINISHED) {
+            throw new IllegalStateException("Cannot chat in a finished game");
+        }
+
+        GamePlayer player = playerRepository.findByTeamGameIdAndPlayerId(gameId, userId)
+                .orElseThrow(() -> new IllegalStateException("You are not in this game"));
+
+        List<GameTeam> teams = new ArrayList<>(game.getTeams());
+        teams.sort(Comparator.comparing(GameTeam::getId));
+        int teamIndex = -1;
+        for (int i = 0; i < teams.size(); i++) {
+            if (teams.get(i).getId().equals(player.getTeam().getId())) {
+                teamIndex = i;
+                break;
+            }
+        }
+
+        eventPublisher.publishChat(gameId, player.getPlayer().getUsername(), teamIndex, text);
     }
 }
