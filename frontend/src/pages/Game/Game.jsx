@@ -389,7 +389,7 @@ const Game = () => {
                             if (m.kind === 'activity') {
                                 return (
                                     <div key={m.id} className="game-chat-line game-chat-activity">
-                                        <span className="game-chat-time">{formatChatTime(m.ts)}</span>
+                                        <span className="game-chat-time">[{formatChatTime(m.ts)}</span>
                                         <span className="game-chat-user" style={{ color: m.teamColor }}>{m.username}</span>
                                         <span className="game-chat-sep">›</span>
                                         <span className="game-chat-activity-text">
@@ -397,7 +397,7 @@ const Game = () => {
                                             <span className="game-chat-activity-task">#{m.problemIndex + 1} {m.problemTitle}</span>
                                             {m.passed && m.points > 0 && <span className="game-chat-activity-points"> +{m.points}</span>}
                                         </span>
-                                        <span className={`game-chat-activity-dot ${m.passed ? 'ok' : 'fail'}`} />
+                                        <span className="game-chat-bracket">]</span>
                                     </div>
                                 );
                             }

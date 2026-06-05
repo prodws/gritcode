@@ -311,6 +311,7 @@
 
 .monaco-container {
     overflow: hidden;
+    margin-top: 8px;
 }
 
 .editor-terminal-container {
