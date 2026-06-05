@@ -8,6 +8,20 @@
     box-sizing: border-box;
     overflow: hidden;
     font-family: var(--font);
+    user-select: none;
+}
+
+/* Selectable exceptions inside the game view */
+.game-page .monaco-editor,
+.game-page .monaco-editor *,
+.game-page .result-pre,
+.game-page .game-chat-line,
+.game-page .game-chat-text,
+.game-page .game-chat-input,
+.game-page input,
+.game-page textarea,
+.game-page .game-desc-body {
+    user-select: text;
 }
 
 .game-rail {
@@ -158,9 +172,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 16px;
-    height: 42px;
-    background: color-mix(in srgb, var(--text) 8%, var(--bg));
+    padding: 5px 14px;
+    height: auto;
+    background: var(--surface);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
 }
@@ -209,4 +223,210 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     font-size: 0.75rem;
+}
+
+/* ---------- middle column: task description on top, chat below ---------- */
+
+.game-middle {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.game-middle .game-desc {
+    overflow-y: auto;
+    border: none;
+    border-radius: 0;
+    flex-shrink: 0;
+}
+
+.game-middle .game-desc.chat-hidden {
+    border: none;
+}
+
+.game-chat-resize-handle {
+    height: 6px;
+    cursor: row-resize;
+    background: transparent;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.game-chat-resize-handle::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 3px;
+    background: var(--text-muted);
+    border-radius: 2px;
+    opacity: 0.4;
+    transition: opacity 0.15s, background 0.15s, width 0.15s;
+}
+
+.game-chat-resize-handle:hover::before {
+    opacity: 1;
+    background: var(--accent);
+    width: 56px;
+}
+
+.game-chat-embed {
+    background: var(--surface);
+    border-radius: 0 0 10px 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+    min-height: 0;
+    font-family: var(--font);
+}
+
+.game-chat-head {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    text-transform: lowercase;
+    background: var(--surface);
+    flex-shrink: 0;
+}
+
+.game-chat-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 14px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.7rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 0;
+}
+
+.game-chat-empty {
+    color: var(--text-muted);
+    font-style: italic;
+    opacity: 0.7;
+    text-align: center;
+    padding: 16px 0;
+}
+
+.game-chat-empty code {
+    background: var(--bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.65rem;
+}
+
+.game-chat-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: baseline;
+}
+
+.game-chat-time,
+.game-chat-bracket {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.game-chat-user {
+    font-weight: 600;
+}
+
+.game-chat-text {
+    color: var(--text);
+    word-break: break-word;
+    flex: 1;
+    min-width: 0;
+}
+
+.game-chat-prompt {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-top: 1px dashed var(--border);
+    padding: 4px 12px;
+    flex-shrink: 0;
+}
+
+.game-chat-arrow {
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+}
+
+.game-chat-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.75rem;
+    padding: 2px 0;
+    outline: none;
+}
+
+.game-chat-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+.game-chat-activity {
+    color: var(--text-muted);
+    align-items: center;
+}
+
+.game-chat-activity .game-chat-time {
+    opacity: 0.6;
+}
+
+.game-chat-sep {
+    color: var(--accent);
+    opacity: 0.6;
+}
+
+.game-chat-activity-text {
+    color: var(--text-muted);
+    flex: 1;
+    min-width: 0;
+}
+
+.game-chat-activity-task {
+    color: var(--text);
+}
+
+.game-chat-activity-points {
+    color: var(--diff-easy);
+    font-weight: 600;
+}
+
+.game-chat-activity-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.game-chat-activity-dot.ok {
+    background: var(--diff-easy);
+    box-shadow: 0 0 6px var(--diff-easy);
+}
+
+.game-chat-activity-dot.fail {
+    background: var(--error);
+    box-shadow: 0 0 6px var(--error);
 }
