@@ -44,7 +44,7 @@ class ProblemServiceTest {
     void getProblems_returnsAllProblems() {
         Problem p1 = mock(Problem.class);
         Problem p2 = mock(Problem.class);
-        when(problemRepository.findAll()).thenReturn(List.of(p1, p2));
+        when(problemRepository.findAllWithFiles()).thenReturn(List.of(p1, p2));
 
         List<Problem> result = problemService.getProblems();
 
