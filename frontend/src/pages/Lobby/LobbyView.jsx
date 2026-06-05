@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState, useCallback, useRef } from 'rea
 import { useNavigate } from 'react-router-dom';
 import { Copy, Plus, Crown, Users, User, ListChecks, Timer, Tag, LogOut, ChevronRight, Info } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
-import { fetchGame, switchTeam, leaveGame, startGame, updateGameSettings } from '../../game/api';
+import { fetchGame, switchTeam, leaveGame, startGame, updateGameSettings, sendChatMessage } from '../../game/api';
 import { subscribeGame } from '../../game/socket';
 import './Lobby.css';
 
@@ -122,21 +122,26 @@ const COMMAND_BOUNDS = {
 const KNOWN_COMMANDS = Object.keys(COMMAND_BOUNDS);
 
 const parseCommand = (raw) => {
-    const trimmed = raw.trim().toLowerCase();
+    const trimmed = raw.trim();
     if (!trimmed) return { error: 'empty command' };
 
-    const m = trimmed.match(/^(\w+)\s+(.+)$/);
-    if (!m) {
-        const firstWord = trimmed.split(/\s+/)[0];
-        if (KNOWN_COMMANDS.includes(firstWord)) {
-            return { error: `${firstWord} needs a number, e.g. ${firstWord} 3` };
-        }
-        return { error: `unknown command: "${trimmed}"` };
+    const m = trimmed.match(/^(\w+)(?:\s+(.+))?$/s);
+    if (!m) return { error: `unknown command: "${trimmed}"` };
+    const key = m[1].toLowerCase();
+    const val = m[2];
+
+    // Chat: preserve original casing/whitespace in the message
+    if (key === 'write') {
+        if (!val || !val.trim()) return { error: 'write needs a message, e.g. write hi team' };
+        return { chat: val.trim() };
     }
-    const [, key, val] = m;
 
     if (!KNOWN_COMMANDS.includes(key)) {
         return { error: `unknown command: "${key}"` };
+    }
+
+    if (val === undefined) {
+        return { error: `${key} needs a number, e.g. ${key} 3` };
     }
 
     const n = parseInt(val, 10);
@@ -281,17 +286,23 @@ const BottomBar = ({ isHost, canStart, startHint, onStart, waiting }) => {
 
 const formatTime = (ts) => {
     const d = new Date(ts);
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
 
-const COMMAND_REFERENCE = [
-    { cmd: 'teams N',   desc: 'set the number of teams (2–5)' },
-    { cmd: 'players N', desc: 'set players per team (1–5)' },
-    { cmd: 'tasks N',   desc: 'set the number of tasks (1–10)' },
-    { cmd: 'time N',    desc: 'set the time limit in minutes (1–60)' },
+const COMMAND_REFERENCE_HOST = [
+    { cmd: 'write <msg>', desc: 'send a chat message' },
+    { cmd: 'teams N',     desc: 'set the number of teams (2–5)' },
+    { cmd: 'players N',   desc: 'set players per team (1–5)' },
+    { cmd: 'tasks N',     desc: 'set the number of tasks (1–10)' },
+    { cmd: 'time N',      desc: 'set the time limit in minutes (1–60)' },
 ];
 
-const ActivityLog = ({ entries, canType, onSubmit }) => {
+const COMMAND_REFERENCE_GUEST = [
+    { cmd: 'write <msg>', desc: 'send a chat message' },
+];
+
+const ActivityLog = ({ entries, canType, onSubmit, isHost }) => {
+    const reference = isHost ? COMMAND_REFERENCE_HOST : COMMAND_REFERENCE_GUEST;
     const [draft, setDraft] = useState('');
     const [history, setHistory] = useState([]);
     const [historyIdx, setHistoryIdx] = useState(-1);
@@ -342,14 +353,24 @@ const ActivityLog = ({ entries, canType, onSubmit }) => {
                     <div key={e.id} className={`lobby-log-line${e.kind ? ' lobby-log-' + e.kind : ''}`}>
                         <span className="lobby-log-time">{formatTime(e.ts)}</span>
                         {e.kind === 'cmd' && <span className="lobby-log-arrow">›</span>}
-                        <span className="lobby-log-msg">{e.msg}</span>
+                        {e.kind === 'chat' ? (
+                            <span className="lobby-log-msg">
+                                <span
+                                    className="lobby-log-chat-user"
+                                    style={{ color: e.teamColor || 'var(--accent)' }}
+                                >{e.username}:</span>{' '}
+                                <span className="lobby-log-chat-text">{e.text}</span>
+                            </span>
+                        ) : (
+                            <span className="lobby-log-msg">{e.msg}</span>
+                        )}
                     </div>
                 ))}
             </div>
 
             {helpOpen && (
                 <div className="lobby-log-help">
-                    {COMMAND_REFERENCE.map(c => (
+                    {reference.map(c => (
                         <div key={c.cmd} className="lobby-log-help-row">
                             <span className="lobby-log-help-cmd">{c.cmd}</span>
                             <span className="lobby-log-help-desc">{c.desc}</span>
@@ -433,14 +454,27 @@ const LobbyView = ({ gameId, onLeave }) => {
     }, []);
 
     const runCommand = useCallback((raw) => {
-        appendLog(raw, 'cmd');
-        const { patch, error } = parseCommand(raw);
-        if (error) {
-            appendLog(error, 'err');
+        const parsed = parseCommand(raw);
+        if (parsed.error) {
+            appendLog(raw, 'cmd');
+            appendLog(parsed.error, 'err');
             return;
         }
-        updateGameSettings(token, gameId, patch).then(setGame).catch(e => appendLog(e.message, 'err'));
-    }, [appendLog, token, gameId]);
+        if (parsed.chat !== undefined) {
+            // chat is its own log entry from the broadcast — don't echo the command line
+            sendChatMessage(token, gameId, parsed.chat).catch(e => appendLog(e.message, 'err'));
+            return;
+        }
+        // settings-changing commands require host
+        const isHostNow = game?.host?.id === currentUser?.id;
+        if (!isHostNow) {
+            appendLog(raw, 'cmd');
+            appendLog('only the host can change settings', 'err');
+            return;
+        }
+        appendLog(raw, 'cmd');
+        updateGameSettings(token, gameId, parsed.patch).then(setGame).catch(e => appendLog(e.message, 'err'));
+    }, [appendLog, token, gameId, game, currentUser]);
 
     // Generate log entries by diffing game snapshots
     useEffect(() => {
@@ -505,7 +539,22 @@ const LobbyView = ({ gameId, onLeave }) => {
     }, [token, gameId, navigate, currentUser, showToast, onLeave]);
 
     useEffect(() => { refresh(); }, [refresh]);
-    useEffect(() => subscribeGame(gameId, () => refresh()), [gameId, refresh]);
+    useEffect(() => subscribeGame(gameId, (event) => {
+        if (event?.type === 'CHAT') {
+            const color = teamColor(event.teamIndex ?? 0);
+            setLog(prev => [{
+                id: `${event.ts}-${Math.random()}`,
+                ts: new Date(event.ts).getTime(),
+                kind: 'chat',
+                username: event.username,
+                text: event.text,
+                teamColor: color,
+            }, ...prev].slice(0, 50));
+            return;
+        }
+        // default: STATE_CHANGED — refetch
+        refresh();
+    }), [gameId, refresh]);
 
     // Auto-leave on tab close / refresh / pagehide so the host's lobby updates.
     useEffect(() => {
@@ -650,7 +699,7 @@ const LobbyView = ({ gameId, onLeave }) => {
                 </div>
             </div>
 
-            <ActivityLog entries={log} canType={isHost} onSubmit={runCommand} />
+            <ActivityLog entries={log} canType={true} onSubmit={runCommand} isHost={isHost} />
 
             <BottomBar
                 isHost={isHost}

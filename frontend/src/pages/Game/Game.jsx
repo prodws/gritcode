@@ -3,11 +3,25 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import ReactMarkdown from 'react-markdown';
 import { AppContext } from '../../context/AppContext';
-import { fetchGame, submitGameSolution, finishGame } from '../../game/api';
+import { fetchGame, submitGameSolution, finishGame, sendChatMessage } from '../../game/api';
 import { subscribeGame } from '../../game/socket';
 import Spinner from '../../components/Spinner/Spinner';
 import './Game.css';
 import '../Practice/Practice.css';
+
+const TEAM_COLORS = [
+    'var(--accent)',
+    'var(--diff-easy)',
+    'var(--diff-medium)',
+    'var(--diff-hard)',
+    '#a78bfa',
+];
+const teamColor = (idx) => TEAM_COLORS[idx % TEAM_COLORS.length];
+
+const formatChatTime = (ts) => {
+    const d = new Date(ts);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
 
 const STATUS_COLOR = {
     PASSED: 'var(--success)',
@@ -70,6 +84,68 @@ const Game = () => {
     const [result, setResult] = useState(null);
     const [running, setRunning] = useState(false);
     const [now, setNow] = useState(Date.now());
+    const [chatMessages, setChatMessages] = useState([]);
+    const [chatDraft, setChatDraft] = useState('');
+    const [chatHeight, setChatHeight] = useState(180);
+    const [isChatDragging, setIsChatDragging] = useState(false);
+    const chatStartYRef = useRef(0);
+    const chatStartHeightRef = useRef(0);
+    const chatScrollRef = useRef(null);
+    const middleRef = useRef(null);
+
+    const CHAT_MIN = 32;            // always at least the prompt row, never fully gone
+    const DESC_MIN_FALLBACK = 160;  // fallback before desc content measures
+    const RESIZE_HANDLE = 6;
+    const descRef = useRef(null);
+    const terminalPanelRef = useRef(null);
+
+    // On mount, line up chat top with terminal top
+    useEffect(() => {
+        const align = () => {
+            const tPanel = terminalPanelRef.current;
+            const mCol = middleRef.current;
+            if (!tPanel || !mCol) return;
+            const tTop = tPanel.getBoundingClientRect().top;
+            const mBottom = mCol.getBoundingClientRect().bottom;
+            const newH = Math.max(CHAT_MIN, mBottom - tTop);
+            setChatHeight(newH);
+        };
+        const id = requestAnimationFrame(align);
+        return () => cancelAnimationFrame(id);
+    }, []);
+
+    const onChatDragStart = (e) => {
+        setIsChatDragging(true);
+        chatStartYRef.current = e.clientY;
+        chatStartHeightRef.current = chatHeight;
+    };
+
+    useEffect(() => {
+        const onMove = (e) => {
+            if (!isChatDragging) return;
+            const delta = chatStartYRef.current - e.clientY;
+            const middleH = middleRef.current?.getBoundingClientRect().height ?? Infinity;
+            // The visible inner height of the description (excluding padding) needs to fit content.
+            const descEl = descRef.current;
+            // scrollHeight includes content; offsetHeight is the visible box.
+            // If content overflows the box, give the description enough room to show it.
+            const contentNeeded = descEl
+                ? Math.max(DESC_MIN_FALLBACK, descEl.scrollHeight + 4)
+                : DESC_MIN_FALLBACK;
+            // Don't let descMin exceed half the middle column — otherwise the user can't ever grow chat.
+            const descMin = Math.min(contentNeeded, Math.max(DESC_MIN_FALLBACK, middleH * 0.5));
+            const max = Math.max(CHAT_MIN, middleH - descMin - RESIZE_HANDLE);
+            const next = Math.min(max, Math.max(CHAT_MIN, chatStartHeightRef.current + delta));
+            setChatHeight(next);
+        };
+        const onUp = () => setIsChatDragging(false);
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        return () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+    }, [isChatDragging]);
     const [terminalHeight, setTerminalHeight] = useState(180);
     const [isDragging, setIsDragging] = useState(false);
     const startYRef = useRef(0);
@@ -117,7 +193,47 @@ const Game = () => {
     }, [token, gameId, navigate, currentUser, showToast]);
 
     useEffect(() => { refresh(); }, [refresh]);
-    useEffect(() => subscribeGame(gameId, () => refresh()), [gameId, refresh]);
+    useEffect(() => subscribeGame(gameId, (event) => {
+        if (event?.type === 'CHAT') {
+            setChatMessages(prev => [...prev, {
+                id: `${event.ts}-${Math.random()}`,
+                ts: new Date(event.ts).getTime(),
+                kind: 'chat',
+                username: event.username,
+                text: event.text,
+                teamColor: teamColor(event.teamIndex ?? 0),
+            }].slice(-100));
+            return;
+        }
+        if (event?.type === 'ACTIVITY') {
+            setChatMessages(prev => [...prev, {
+                id: `${event.ts}-${Math.random()}`,
+                ts: new Date(event.ts).getTime(),
+                kind: 'activity',
+                username: event.username,
+                teamColor: teamColor(event.teamIndex ?? 0),
+                problemTitle: event.problemTitle,
+                problemIndex: event.problemIndex,
+                passed: event.passed,
+                points: event.points,
+            }].slice(-100));
+            refresh(); // also refresh state for scoreboard
+            return;
+        }
+        refresh();
+    }), [gameId, refresh]);
+
+    useEffect(() => {
+        if (chatScrollRef.current) chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }, [chatMessages]);
+
+    const sendChat = (e) => {
+        e?.preventDefault?.();
+        const text = chatDraft.trim();
+        if (!text) return;
+        sendChatMessage(token, gameId, text).catch(() => {});
+        setChatDraft('');
+    };
 
     // load problem descriptions + templates once
     useEffect(() => {
@@ -249,11 +365,65 @@ const Game = () => {
                 )}
             </div>
 
-            <div className="game-desc">
-                <div className="game-desc-meta">task {problemIndex + 1} of {sortedProblems.length}</div>
-                <h1 className="game-desc-title">{currentGp?.problem.title}</h1>
-                <div className="game-desc-body">
-                    <ReactMarkdown>{descs[currentProblemId] ?? ''}</ReactMarkdown>
+            <div className="game-middle" ref={middleRef}>
+                <div
+                    ref={descRef}
+                    className={`game-desc${chatHeight === 0 ? ' chat-hidden' : ''}`}
+                    style={{ height: `calc(100% - ${chatHeight}px)` }}
+                >
+                    <div className="game-desc-meta">task {problemIndex + 1} of {sortedProblems.length}</div>
+                    <h1 className="game-desc-title">{currentGp?.problem.title}</h1>
+                    <div className="game-desc-body">
+                        <ReactMarkdown>{descs[currentProblemId] ?? ''}</ReactMarkdown>
+                    </div>
+                </div>
+
+                <div className="game-chat-resize-handle" onMouseDown={onChatDragStart} />
+
+                <div className="game-chat-embed" style={{ height: chatHeight }}>
+                    <div className="game-chat-head">
+                        <span>chat</span>
+                    </div>
+                    <div className="game-chat-scroll" ref={chatScrollRef}>
+                        {chatMessages.map(m => {
+                            if (m.kind === 'activity') {
+                                return (
+                                    <div key={m.id} className="game-chat-line game-chat-activity">
+                                        <span className="game-chat-time">{formatChatTime(m.ts)}</span>
+                                        <span className="game-chat-user" style={{ color: m.teamColor }}>{m.username}</span>
+                                        <span className="game-chat-sep">›</span>
+                                        <span className="game-chat-activity-text">
+                                            {m.passed ? 'solved' : 'failed'}{' '}
+                                            <span className="game-chat-activity-task">#{m.problemIndex + 1} {m.problemTitle}</span>
+                                            {m.passed && m.points > 0 && <span className="game-chat-activity-points"> +{m.points}</span>}
+                                        </span>
+                                        <span className={`game-chat-activity-dot ${m.passed ? 'ok' : 'fail'}`} />
+                                    </div>
+                                );
+                            }
+                            return (
+                                <div key={m.id} className="game-chat-line">
+                                    <span className="game-chat-time">[{formatChatTime(m.ts)}</span>
+                                    <span className="game-chat-user" style={{ color: m.teamColor }}>{m.username}:</span>
+                                    <span className="game-chat-text">{m.text}</span>
+                                    <span className="game-chat-bracket">]</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <form className="game-chat-prompt" onSubmit={sendChat}>
+                        <span className="game-chat-arrow">›</span>
+                        <input
+                            type="text"
+                            className="game-chat-input"
+                            value={chatDraft}
+                            onChange={e => setChatDraft(e.target.value)}
+                            placeholder=""
+                            spellCheck={false}
+                            autoComplete="off"
+                            maxLength={500}
+                        />
+                    </form>
                 </div>
             </div>
 
@@ -289,7 +459,7 @@ const Game = () => {
 
                         <div className="terminal-resize-handle" onMouseDown={onTerminalDragStart} />
 
-                        <div className="terminal-panel" style={{ height: terminalHeight }}>
+                        <div ref={terminalPanelRef} className="terminal-panel" style={{ height: terminalHeight }}>
                             <div className="terminal-header">
                                 <span>submission</span>
                             </div>
@@ -309,6 +479,7 @@ const Game = () => {
                     </div>
                 </div>
             </div>
+
         </div>
     );
 };

@@ -79,6 +79,10 @@ export const finishGame = (token, gameId) =>
     gql(token, `mutation($g: ID!) { finishGame(gameId: $g) { ${GAME_FRAGMENT} } }`, { g: gameId })
         .then(d => d.finishGame);
 
+export const sendChatMessage = (token, gameId, text) =>
+    gql(token, `mutation($g: ID!, $t: String!) { sendChatMessage(gameId: $g, text: $t) }`, { g: gameId, t: text })
+        .then(d => d.sendChatMessage);
+
 export const submitGameSolution = (token, gameId, problemId, code) =>
     gql(token, `mutation($g: ID!, $p: ID!, $c: String!) { submitGameSolution(gameId: $g, problemId: $p, code: $c) { id status passed stdout stderr } }`,
         { g: gameId, p: problemId, c: code })

@@ -37,6 +37,18 @@
     background: var(--bg);
     flex: 1;
     min-height: 0;
+    user-select: none;
+}
+
+/* Selectable exceptions inside the lobby */
+.lobby-window .lobby-code-text,
+.lobby-window .lobby-log-input,
+.lobby-window input,
+.lobby-window textarea,
+.lobby-window .lobby-log-msg,
+.lobby-window .lobby-log-time,
+.lobby-window .lobby-log-chat-text {
+    user-select: text;
 }
 
 body[data-theme='light'] .lobby-window {
@@ -587,6 +599,9 @@ body:not([data-theme='light']) .lobby-config-input { color-scheme: dark; }
 
 .lobby-log-cmd .lobby-log-msg { color: var(--accent); }
 .lobby-log-err .lobby-log-msg { color: var(--error); }
+
+.lobby-log-chat-user { font-weight: 600; }
+.lobby-log-chat-text { color: var(--text); }
 
 .lobby-log-line {
     display: flex;
