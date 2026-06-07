@@ -240,7 +240,7 @@ export const AppProvider = ({ children }) => {
     }, [navigate, token]);
 
     const goPractice = useCallback(() => {
-        navigate('/practice');
+        navigate('/forge');
     }, [navigate]);
 
     const goPracticeById = useCallback(async (id) => {

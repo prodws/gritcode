@@ -50,7 +50,7 @@ const Results = () => {
                     ))}
                 </div>
                 <h1 className={`results-verdict ${verdictClass}`}>{verdict}</h1>
-                <button className="results-back" onClick={() => navigate('/practice')}>back to practice</button>
+                <button className="results-back" onClick={() => navigate('/forge')}>back to practice</button>
             </div>
         </div>
     );

@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
-import { myFinishedGames } from '../../game/api';
+import { myActiveGames, myFinishedGames } from '../../game/api';
 import './Profile.css';
 
 const DIFF_COLOR = {
@@ -55,6 +55,8 @@ const ProfilePage = () => {
     const [expandedSub, setExpandedSub] = useState(null);
     const [allProblems, setAllProblems] = useState([]);
     const [games, setGames] = useState([]);
+    const [activeGames, setActiveGames] = useState([]);
+    const [recentAttempts, setRecentAttempts] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => { fetchSubmissions(); }, [fetchSubmissions]);
@@ -62,6 +64,33 @@ const ProfilePage = () => {
     useEffect(() => {
         if (!token) return;
         myFinishedGames(token).then(setGames).catch(() => setGames([]));
+        myActiveGames(token)
+            .then(games => setActiveGames((games ?? []).filter(g =>
+                g.status === 'IN_PROGRESS' && g.startedAt && !g.endedAt &&
+                g.teams.some(t => t.players.some(p => p.status === 'ACTIVE'))
+            )))
+            .catch(() => {});
+    }, [token]);
+
+    useEffect(() => {
+        if (!token) return;
+        fetch('http://localhost:8080/graphql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ query: `{ mySubmissions { status problem { id title difficulty } createdAt } }` }),
+        })
+            .then(r => r.json())
+            .then(d => {
+                const subs = d.data?.mySubmissions ?? [];
+                const seen = new Set();
+                const recent = [];
+                for (const s of [...subs].reverse()) {
+                    if (!seen.has(s.problem.id)) { seen.add(s.problem.id); recent.push(s); }
+                    if (recent.length >= 5) break;
+                }
+                setRecentAttempts(recent);
+            })
+            .catch(() => {});
     }, [token]);
 
     useEffect(() => {
@@ -202,6 +231,61 @@ const ProfilePage = () => {
                         })}
                     </div>
                 </div>
+
+                {/* Active games */}
+                {activeGames.length > 0 && (
+                    <div className="profile-submissions">
+                        <hr className="profile-divider submissions-divider" />
+                        <p className="profile-section-title">active games</p>
+                        <div className="games-list">
+                            {activeGames.map(game => {
+                                const vs = game.teams.map(t => t.teamName).join(' vs ');
+                                const elapsed = game.startedAt ? Math.floor((Date.now() - new Date(game.startedAt)) / 1000) : 0;
+                                const remaining = Math.max(0, game.timeLimitSeconds - elapsed);
+                                const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
+                                const ss = String(remaining % 60).padStart(2, '0');
+                                return (
+                                    <div key={game.id} className="games-row" onClick={() => navigate(`/game/${game.id}`)}>
+                                        <span className="games-layout" style={{ color: 'var(--accent)' }}>live</span>
+                                        <span className="games-layout" style={{ flex: 1 }}>{vs}</span>
+                                        <span className="games-date" style={{ color: 'var(--accent)', fontVariantNumeric: 'tabular-nums' }}>{mm}:{ss}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* Recent attempts */}
+                {recentAttempts.length > 0 && (
+                    <div className="profile-submissions">
+                        <hr className="profile-divider submissions-divider" />
+                        <p className="profile-section-title">recent attempts</p>
+                        <div className="submissions-list">
+                            {recentAttempts.map(s => (
+                                <div key={s.problem.id} className="prob-group">
+                                    <div className="prob-group-header" style={{ '--diff-color': DIFF_COLOR[s.problem.difficulty] }}
+                                        onClick={() => goPracticeById(s.problem.id)}>
+                                        <div className="prob-group-left">
+                                            <DiffStars difficulty={s.problem.difficulty} />
+                                            <span className="prob-group-title">{s.problem.title}</span>
+                                        </div>
+                                        <div className="prob-group-right">
+                                            <span className={`prob-group-badge ${s.status === 'PASSED' ? 'badge-solved' : 'badge-attempted'}`}>
+                                                {s.status === 'PASSED' ? 'solved' : s.status.replace(/_/g, ' ').toLowerCase()}
+                                            </span>
+                                            {s.createdAt && (
+                                                <span className="sub-item-date">
+                                                    {new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* BOTTOM: problems with grouped submissions */}
                 <div className="profile-submissions">

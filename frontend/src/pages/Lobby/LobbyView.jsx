@@ -68,44 +68,27 @@ const useDeferredRemoval = (items, getKey, animationMs = 350) => {
 /* ---------- Settings — UI mode ---------- */
 
 const SettingsRow = ({ icon: Icon, label, value, editable, min, max, onChange, suffix }) => {
-    const [draft, setDraft] = useState(value);
-    const debounceRef = useRef();
-
-    useEffect(() => { setDraft(value); }, [value]);
-
-    const scheduleCommit = (raw) => {
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => {
-            const n = Math.max(min, Math.min(max, Number(raw) || min));
-            if (n !== value) onChange(n);
-        }, 60);
-    };
-
-    const handleChange = (raw) => {
-        setDraft(raw);
-        scheduleCommit(raw);
+    const step = (delta) => {
+        const n = Math.max(min, Math.min(max, value + delta));
+        if (n !== value) onChange(n);
     };
 
     return (
         <div className="lobby-config-row">
             <span className="lobby-config-label">
-                {Icon && <Icon size={14} className="lobby-config-icon" />}
+                {Icon && <Icon size={13} className="lobby-config-icon" />}
                 <span>{label}</span>
             </span>
             <span className="lobby-config-value-wrap">
                 {editable ? (
-                    <input
-                        type="number"
-                        min={min}
-                        max={max}
-                        value={draft}
-                        onChange={e => handleChange(e.target.value)}
-                        className="lobby-config-input"
-                    />
+                    <>
+                        <button className="lobby-stepper-btn" onClick={() => step(-1)} disabled={value <= min}>−</button>
+                        <span className="lobby-config-value">{value}{suffix}</span>
+                        <button className="lobby-stepper-btn" onClick={() => step(1)} disabled={value >= max}>+</button>
+                    </>
                 ) : (
-                    <span className="lobby-config-value">{value}</span>
+                    <span className="lobby-config-value">{value}{suffix}</span>
                 )}
-                {suffix && <span className="lobby-config-suffix">{suffix}</span>}
             </span>
         </div>
     );
@@ -123,42 +106,39 @@ const KNOWN_COMMANDS = Object.keys(COMMAND_BOUNDS);
 
 const parseCommand = (raw) => {
     const trimmed = raw.trim();
-    if (!trimmed) return { error: 'empty command' };
+    if (!trimmed) return { error: 'empty input' };
 
-    const m = trimmed.match(/^(\w+)(?:\s+(.+))?$/s);
+    // Plain text → chat message
+    if (!trimmed.startsWith('/')) return { chat: trimmed };
+
+    const m = trimmed.match(/^\/(\w+)(?:\s+(.+))?$/s);
     if (!m) return { error: `unknown command: "${trimmed}"` };
     const key = m[1].toLowerCase();
     const val = m[2];
 
-    // Chat: preserve original casing/whitespace in the message
-    if (key === 'write') {
-        if (!val || !val.trim()) return { error: 'write needs a message, e.g. write hi team' };
-        return { chat: val.trim() };
-    }
-
     if (!KNOWN_COMMANDS.includes(key)) {
-        return { error: `unknown command: "${key}"` };
+        return { error: `unknown command: "/${key}"` };
     }
 
     if (val === undefined) {
-        return { error: `${key} needs a number, e.g. ${key} 3` };
+        return { error: `/${key} needs a number, e.g. /${key} 3` };
     }
 
     const n = parseInt(val, 10);
     if (!Number.isFinite(n)) {
-        return { error: `${key} expects a number, got "${val}"` };
+        return { error: `/${key} expects a number, got "${val}"` };
     }
 
     const { min, max } = COMMAND_BOUNDS[key];
     if (n < min || n > max) {
-        return { error: `${key} must be between ${min} and ${max}` };
+        return { error: `/${key} must be between ${min} and ${max}` };
     }
 
     if (key === 'teams') return { patch: { maxTeams: n } };
     if (key === 'players') return { patch: { maxPlayersPerTeam: n } };
     if (key === 'tasks') return { patch: { problemCount: n } };
     if (key === 'time') return { patch: { timeLimitSeconds: n * 60 } };
-    return { error: `unknown command: "${key}"` };
+    return { error: `unknown command: "/${key}"` };
 };
 
 /* ---------- Teams ---------- */
@@ -176,7 +156,7 @@ const teamColor = (idx) => TEAM_COLORS[idx % TEAM_COLORS.length];
 const TeamList = ({ teams, maxPlayers, currentUserId, hostId, onJoin }) => {
     const { rendered, leaving } = useDeferredRemoval(teams, t => t.id, 350);
     return (
-        <div className="lobby-teams">
+        <div className="lobby-teams" style={{ '--team-count': rendered.length }}>
             {rendered.map((team, idx) => {
                 const color = teamColor(idx);
                 return (
@@ -232,19 +212,46 @@ const RenderEmptySlots = ({ count, onJoin }) => (
     ))
 );
 
-/* ---------- Top / bottom bars ---------- */
+/* ---------- Top bar + strip action ---------- */
 
-const TopBar = ({ game, copied, onCopyCode, onLeave }) => {
+const StripAction = ({ isHost, canStart, startHint, onStart }) => {
+    const spin = useSpinner();
+    return (
+        <div className="lobby-strip-action">
+            {isHost ? (
+                <>
+                    <button className="lobby-start" onClick={onStart} disabled={!canStart}>
+                        <span>start</span><ChevronRight size={16} />
+                    </button>
+                    <span className="lobby-bar-status">
+                        {startHint ? (
+                            <><span className="lobby-status-dot warn" /> {startHint}</>
+                        ) : (
+                            <><span className="lobby-status-dot ok" /> ready to launch</>
+                        )}
+                    </span>
+                </>
+            ) : (
+                <span className="lobby-bar-status">
+                    <span className="lobby-spinner">{spin}</span> waiting for host...
+                </span>
+            )}
+        </div>
+    );
+};
+
+const TopBar = ({ game, copied, onCopyCode, onLeave, isHost, settings }) => {
     return (
         <div className="lobby-bar lobby-bar-top">
-            <div className="lobby-bar-left" />
-
-            <button className="lobby-code-pill" onClick={onCopyCode} title="copy invite code">
-                <Copy size={12} />
-                <span className="lobby-code-text">{copied ? 'copied' : game.inviteCode}</span>
-            </button>
+            <div className="lobby-bar-left">
+                {settings}
+            </div>
 
             <div className="lobby-bar-right">
+                <button className="lobby-code-pill" onClick={onCopyCode} title="copy invite code">
+                    <Copy size={12} />
+                    <span className="lobby-code-text">{copied ? 'copied' : game.inviteCode}</span>
+                </button>
                 <span className="lobby-bar-host">host:&nbsp;<strong>{game.host.username}</strong></span>
                 <button className="lobby-leave-icon" onClick={onLeave} title="leave room">
                     <LogOut size={14} />
@@ -254,33 +261,6 @@ const TopBar = ({ game, copied, onCopyCode, onLeave }) => {
     );
 };
 
-const BottomBar = ({ isHost, canStart, startHint, onStart, waiting }) => {
-    const spin = useSpinner();
-    return (
-        <div className="lobby-bar lobby-bar-bottom">
-            <span className="lobby-bar-status">
-                {startHint ? (
-                    <><span className="lobby-status-dot warn" /> {startHint}</>
-                ) : isHost ? (
-                    <><span className="lobby-status-dot ok" /> ready to launch</>
-                ) : (
-                    <><span className="lobby-spinner">{spin}</span> {waiting}</>
-                )}
-            </span>
-            {isHost && (
-                <button
-                    className="lobby-start"
-                    onClick={onStart}
-                    disabled={!canStart}
-                    title={startHint ?? 'start the game'}
-                >
-                    <span>start</span>
-                    <ChevronRight size={16} />
-                </button>
-            )}
-        </div>
-    );
-};
 
 /* ---------- Activity log ---------- */
 
@@ -290,18 +270,15 @@ const formatTime = (ts) => {
 };
 
 const COMMAND_REFERENCE_HOST = [
-    { cmd: 'write <msg>', desc: 'send a chat message' },
-    { cmd: 'teams N',     desc: 'set the number of teams (2–5)' },
-    { cmd: 'players N',   desc: 'set players per team (1–5)' },
-    { cmd: 'tasks N',     desc: 'set the number of tasks (1–10)' },
-    { cmd: 'time N',      desc: 'set the time limit in minutes (1–60)' },
+    { cmd: '/teams N',   desc: 'set the number of teams (2–5)' },
+    { cmd: '/players N', desc: 'set players per team (1–5)' },
+    { cmd: '/tasks N',   desc: 'set the number of tasks (1–10)' },
+    { cmd: '/time N',    desc: 'set the time limit in minutes (1–60)' },
 ];
 
-const COMMAND_REFERENCE_GUEST = [
-    { cmd: 'write <msg>', desc: 'send a chat message' },
-];
+const COMMAND_REFERENCE_GUEST = [];
 
-const ActivityLog = ({ entries, canType, onSubmit, isHost }) => {
+const ActivityLog = ({ entries, canType, onSubmit, isHost, stripAction }) => {
     const reference = isHost ? COMMAND_REFERENCE_HOST : COMMAND_REFERENCE_GUEST;
     const [draft, setDraft] = useState('');
     const [history, setHistory] = useState([]);
@@ -351,19 +328,25 @@ const ActivityLog = ({ entries, canType, onSubmit, isHost }) => {
                     <div className="lobby-log-empty">waiting for players to join</div>
                 ) : entries.map(e => (
                     <div key={e.id} className={`lobby-log-line${e.kind ? ' lobby-log-' + e.kind : ''}`}>
-                        <span className="lobby-log-time">{formatTime(e.ts)}</span>
-                        {e.kind === 'cmd' && <span className="lobby-log-arrow">›</span>}
-                        {e.kind === 'chat' ? (
-                            <span className="lobby-log-msg">
-                                <span
-                                    className="lobby-log-chat-user"
-                                    style={{ color: e.teamColor || 'var(--accent)' }}
-                                >{e.username}:</span>{' '}
-                                <span className="lobby-log-chat-text">{e.text}</span>
-                            </span>
-                        ) : (
-                            <span className="lobby-log-msg">{e.msg}</span>
-                        )}
+                        <span className="lobby-log-line-prefix">
+                            <span className="lobby-log-bracket">[</span>
+                            <span className="lobby-log-time">{formatTime(e.ts)}</span>
+                            {e.kind === 'cmd' && <span className="lobby-log-arrow"> ›</span>}
+                        </span>
+                        <span className="lobby-log-line-body">
+                            {e.kind === 'chat' ? (
+                                <>
+                                    <span
+                                        className="lobby-log-chat-user"
+                                        style={{ color: e.teamColor || 'var(--accent)' }}
+                                    >{e.username}:</span>{' '}
+                                    <span className="lobby-log-chat-text">{e.text}</span>
+                                </>
+                            ) : (
+                                <span className="lobby-log-msg">{e.msg}</span>
+                            )}
+                        </span>
+                        <span className="lobby-log-bracket lobby-log-bracket-end">]</span>
                     </div>
                 ))}
             </div>
@@ -388,19 +371,24 @@ const ActivityLog = ({ entries, canType, onSubmit, isHost }) => {
                         value={draft}
                         onChange={e => setDraft(e.target.value)}
                         onKeyDown={onKeyDown}
-                        placeholder="type a command..."
+                        placeholder=""
                         spellCheck={false}
                         autoComplete="off"
                     />
-                    <button
-                        type="button"
-                        className={`lobby-log-help-btn${helpOpen ? ' active' : ''}`}
-                        onClick={() => setHelpOpen(o => !o)}
-                        title="show commands"
-                    >
-                        <Info size={14} />
-                    </button>
+                    {reference.length > 0 && (
+                        <button
+                            type="button"
+                            className={`lobby-log-help-btn${helpOpen ? ' active' : ''}`}
+                            onClick={() => setHelpOpen(o => !o)}
+                            title="show commands"
+                        >
+                            <Info size={14} />
+                        </button>
+                    )}
                 </form>
+            )}
+            {stripAction && (
+                <div className="lobby-log-footer">{stripAction}</div>
             )}
         </div>
     );
@@ -450,22 +438,22 @@ const LobbyView = ({ gameId, onLeave }) => {
     }, [shouldConfirmLeave, token, gameId, setNavGuard, showConfirm]);
 
     const appendLog = useCallback((msg, kind) => {
-        setLog(prev => [{ id: `${Date.now()}-${Math.random()}`, ts: Date.now(), msg, kind }, ...prev].slice(0, 50));
+        setLog(prev => [...prev, { id: `${Date.now()}-${Math.random()}`, ts: Date.now(), msg, kind }].slice(-50));
     }, []);
 
     const runCommand = useCallback((raw) => {
         const parsed = parseCommand(raw);
+        if (parsed.chat !== undefined) {
+            // chat is its own log entry from the broadcast — don't echo locally
+            sendChatMessage(token, gameId, parsed.chat).catch(e => appendLog(e.message, 'err'));
+            return;
+        }
         if (parsed.error) {
             appendLog(raw, 'cmd');
             appendLog(parsed.error, 'err');
             return;
         }
-        if (parsed.chat !== undefined) {
-            // chat is its own log entry from the broadcast — don't echo the command line
-            sendChatMessage(token, gameId, parsed.chat).catch(e => appendLog(e.message, 'err'));
-            return;
-        }
-        // settings-changing commands require host
+        // slash commands require host
         const isHostNow = game?.host?.id === currentUser?.id;
         if (!isHostNow) {
             appendLog(raw, 'cmd');
@@ -482,7 +470,7 @@ const LobbyView = ({ gameId, onLeave }) => {
         const prev = prevGameRef.current;
         prevGameRef.current = game;
         if (!prev) {
-            setLog(prevLog => [{ id: Date.now(), ts: Date.now(), msg: `room created with code ${game.inviteCode}` }, ...prevLog]);
+            setLog(prevLog => [...prevLog, { id: Date.now(), ts: Date.now(), msg: `room created with code ${game.inviteCode}` }]);
             return;
         }
         const entries = [];
@@ -516,7 +504,7 @@ const LobbyView = ({ gameId, onLeave }) => {
             });
         });
 
-        if (entries.length) setLog(prev => [...entries.reverse(), ...prev].slice(0, 30));
+        if (entries.length) setLog(prev => [...prev, ...entries].slice(-30));
     }, [game]);
 
     const refresh = useCallback(async () => {
@@ -531,7 +519,7 @@ const LobbyView = ({ gameId, onLeave }) => {
                 // If we triggered the leave ourselves, let the original navigation proceed.
                 if (leftRef.current) return;
                 if (onLeave) onLeave();
-                else navigate('/practice');
+                else navigate('/forge');
             }
         } catch (e) {
             setError(e.message);
@@ -542,14 +530,14 @@ const LobbyView = ({ gameId, onLeave }) => {
     useEffect(() => subscribeGame(gameId, (event) => {
         if (event?.type === 'CHAT') {
             const color = teamColor(event.teamIndex ?? 0);
-            setLog(prev => [{
+            setLog(prev => [...prev, {
                 id: `${event.ts}-${Math.random()}`,
                 ts: new Date(event.ts).getTime(),
                 kind: 'chat',
                 username: event.username,
                 text: event.text,
                 teamColor: color,
-            }, ...prev].slice(0, 50));
+            }].slice(-50));
             return;
         }
         // default: STATE_CHANGED — refetch
@@ -610,7 +598,7 @@ const LobbyView = ({ gameId, onLeave }) => {
         leftRef.current = true;
         await leaveGame(token, gameId);
         if (onLeave) onLeave();
-        else navigate('/practice');
+        else navigate('/forge');
     };
 
     const handleStart = async () => {
@@ -635,59 +623,52 @@ const LobbyView = ({ gameId, onLeave }) => {
                 copied={copied}
                 onCopyCode={copyCode}
                 onLeave={handleLeave}
+                settings={
+                    <>
+                        <SettingsRow
+                            icon={Users}
+                            label="teams"
+                            value={game.maxTeams}
+                            editable={isHost}
+                            min={2} max={5}
+                            onChange={v => pushSettings({ maxTeams: v })}
+                        />
+                        <SettingsRow
+                            icon={User}
+                            label="players per team"
+                            value={game.maxPlayersPerTeam}
+                            editable={isHost}
+                            min={1} max={5}
+                            onChange={v => {
+                                setGame(g => ({ ...g, maxPlayersPerTeam: v }));
+                                pushSettings({ maxPlayersPerTeam: v });
+                            }}
+                        />
+                        <SettingsRow
+                            icon={ListChecks}
+                            label="tasks"
+                            value={game.problems.length}
+                            editable={isHost}
+                            min={1} max={10}
+                            onChange={v => pushSettings({ problemCount: v })}
+                        />
+                        <SettingsRow
+                            icon={Timer}
+                            label="time limit"
+                            value={Math.round(game.timeLimitSeconds / 60)}
+                            editable={isHost}
+                            min={1} max={60}
+                            suffix="m"
+                            onChange={v => {
+                                setGame(g => ({ ...g, timeLimitSeconds: v * 60 }));
+                                pushSettings({ timeLimitSeconds: v * 60 });
+                            }}
+                        />
+                    </>
+                }
             />
 
             <div className="lobby-window-body">
-                <div className="lobby-pane lobby-pane-settings">
-                            <SettingsRow
-                                icon={Users}
-                                label="teams"
-                                value={game.maxTeams}
-                                editable={isHost}
-                                min={2} max={5}
-                                onChange={v => pushSettings({ maxTeams: v })}
-                            />
-                            <SettingsRow
-                                icon={User}
-                                label="players per team"
-                                value={game.maxPlayersPerTeam}
-                                editable={isHost}
-                                min={1} max={5}
-                                onChange={v => {
-                                    setGame(g => ({ ...g, maxPlayersPerTeam: v }));
-                                    pushSettings({ maxPlayersPerTeam: v });
-                                }}
-                            />
-                            <SettingsRow
-                                icon={ListChecks}
-                                label="tasks"
-                                value={game.problems.length}
-                                editable={isHost}
-                                min={1} max={10}
-                                onChange={v => pushSettings({ problemCount: v })}
-                            />
-                            <SettingsRow
-                                icon={Timer}
-                                label="time limit"
-                                value={Math.round(game.timeLimitSeconds / 60)}
-                                editable={isHost}
-                                min={1} max={60}
-                                onChange={v => {
-                                    setGame(g => ({ ...g, timeLimitSeconds: v * 60 }));
-                                    pushSettings({ timeLimitSeconds: v * 60 });
-                                }}
-                            />
-                            <div className="lobby-config-row">
-                                <span className="lobby-config-label">
-                                    <Tag size={14} className="lobby-config-icon" />
-                                    <span>task types</span>
-                                </span>
-                                <span className="lobby-config-tags">
-                                    <span className="lobby-tag">code</span>
-                                </span>
-                            </div>
-                </div>
-
                 <div className="lobby-pane lobby-pane-teams">
                     <TeamList
                         teams={game.teams}
@@ -697,17 +678,14 @@ const LobbyView = ({ gameId, onLeave }) => {
                         onJoin={handleSwitchTeam}
                     />
                 </div>
+                <ActivityLog
+                    entries={log}
+                    canType={true}
+                    onSubmit={runCommand}
+                    isHost={isHost}
+                    stripAction={<StripAction isHost={isHost} canStart={canStart} startHint={startHint} onStart={handleStart} />}
+                />
             </div>
-
-            <ActivityLog entries={log} canType={true} onSubmit={runCommand} isHost={isHost} />
-
-            <BottomBar
-                isHost={isHost}
-                canStart={canStart}
-                startHint={startHint}
-                onStart={handleStart}
-                waiting="waiting for host..."
-            />
         </div>
     );
 };

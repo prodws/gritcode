@@ -188,7 +188,7 @@ const Game = () => {
         if (g.status === 'WAITING') navigate(`/lobby/${gameId}`);
         if (g.status === 'CANCELLED') {
             if (g.host.id !== currentUser?.id) showToast('the host left and the room was closed', 'warning');
-            navigate('/practice');
+            navigate('/forge');
         }
     }, [token, gameId, navigate, currentUser, showToast]);
 

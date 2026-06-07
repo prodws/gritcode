@@ -7,7 +7,7 @@ const HomePage = () => {
     const navigate = useNavigate();
 
     if (currentUser) {
-        return <Navigate to="/practice" replace />;
+        return <Navigate to="/forge" replace />;
     }
 
     return (

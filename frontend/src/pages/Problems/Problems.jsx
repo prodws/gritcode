@@ -157,22 +157,23 @@ const JoinRoomPanel = ({ token, onClose }) => {
 };
 
 const PATH_TO_VIEW = {
-    '/practice': 'problems',
+    '/forge': 'problems',
     '/host': 'create-room',
     '/join': 'join-room',
 };
 const VIEW_TO_PATH = {
-    'problems': '/practice',
+    'problems': '/forge',
     'create-room': '/host',
     'join-room': '/join',
 };
+
 
 const ProblemsPage = () => {
     const { token, goPracticeById, guardedNavigate } = useContext(AppContext);
     const navigate = useNavigate();
     const location = useLocation();
     const view = PATH_TO_VIEW[location.pathname] ?? 'problems';
-    const setView = (next) => guardedNavigate(VIEW_TO_PATH[next] ?? '/practice');
+    const setView = (next) => guardedNavigate(VIEW_TO_PATH[next] ?? '/forge');
     const [problems, setProblems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [sortDir, setSortDir] = useState(() => localStorage.getItem('problems-sortdir') ?? 'asc');
@@ -273,6 +274,7 @@ const ProblemsPage = () => {
     };
 
 
+
     const sorted = [...problems]
         .filter(p => {
             const s = statuses[p.id];
@@ -368,19 +370,6 @@ const ProblemsPage = () => {
                                     </div>
                                 );
                             })}
-                            {(() => {
-                                const total = problems.length;
-                                const solved = Object.values(statuses).filter(s => s === 'completed').length;
-                                const pct = total ? Math.round(solved / total * 100) : 0;
-                                return (
-                                    <div className="problems-progress">
-                                        <div className="problems-progress-bar">
-                                            <div className="problems-progress-fill" style={{ width: `${pct}%` }} />
-                                        </div>
-                                        <span className="problems-progress-label">{solved}/{total}</span>
-                                    </div>
-                                );
-                            })()}
                         </div>
 
                         <div className="quest-detail">
@@ -437,11 +426,6 @@ const ProblemsPage = () => {
                         </div>
                     </div>
                 )}
-            </div>
-            <div className="problems-sidebar">
-                <button className={`sidebar-action${view === 'problems' ? ' active' : ''}`} onClick={() => setView('problems')}>practice</button>
-                <button className={`sidebar-action${view === 'create-room' ? ' active' : ''}`} onClick={() => setView('create-room')}>create room</button>
-                <button className={`sidebar-action${view === 'join-room' ? ' active' : ''}`} onClick={() => setView('join-room')}>join room</button>
             </div>
         </div>
     );

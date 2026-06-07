@@ -80,6 +80,28 @@ body[data-theme='light'] .problems-filter-bar {
   border-bottom: 1px solid #b8beca;
 }
 
+body[data-theme='light'] .lobby-bar {
+  background: #d4d8e2;
+}
+
+body[data-theme='light'] .lobby-pane-teams,
+body[data-theme='light'] .lobby-team-row {
+  background: #eef0f6;
+}
+
+body[data-theme='light'] .lobby-log {
+  background: #dce0e8;
+}
+
+body[data-theme='light'] .lobby-settings-strip {
+  background: #d4d8e2;
+}
+
+body[data-theme='light'] .lobby-window {
+  border-color: #b0b6c8;
+  box-shadow: 0 0 0 1px var(--border), 0 12px 40px rgba(76, 79, 105, 0.14);
+}
+
 body[data-theme='light'] .quest-row:hover {
   background: #d2d6e0;
 }
@@ -122,17 +144,7 @@ body[data-theme='light'] .practice-topbar {
   border-bottom-color: var(--border);
 }
 
-body[data-theme='light'] .sidebar-action.active {
-  color: var(--accent);
-}
 
-body[data-theme='light'] .sidebar-action:hover {
-  color: var(--accent);
-}
-
-body[data-theme='light'] .problems-sidebar {
-  border-left: 1px solid var(--border);
-}
 
 body[data-theme='light'] .filter-bar-search-wrap {
   border-bottom-color: #adb3c4;
@@ -188,10 +200,6 @@ body:not([data-theme='light']) .navbar {
   border-bottom: 1px solid var(--border);
 }
 
-body:not([data-theme='light']) .sidebar-action:hover,
-body:not([data-theme='light']) .sidebar-action.active {
-  text-shadow: 0 0 12px var(--accent);
-}
 
 body:not([data-theme='light']) .quest-detail-desc code {
   background: rgba(137,180,250,0.08);

@@ -38,7 +38,7 @@ function App() {
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
                 <Route path="/solve" element={<ProtectedRoute><PracticePage /></ProtectedRoute>} />
-                <Route path="/practice" element={<ProtectedRoute><ProblemsPage /></ProtectedRoute>} />
+                <Route path="/forge" element={<ProtectedRoute><ProblemsPage /></ProtectedRoute>} />
                 <Route path="/host" element={<ProtectedRoute><ProblemsPage /></ProtectedRoute>} />
                 <Route path="/join" element={<ProtectedRoute><ProblemsPage /></ProtectedRoute>} />
                 <Route path="/lobby/:gameId" element={<ProtectedRoute><Lobby /></ProtectedRoute>} />

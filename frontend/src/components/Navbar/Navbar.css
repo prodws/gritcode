@@ -11,6 +11,42 @@
   background: var(--bg);
 }
 
+.navbar-nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.navbar-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  font-family: var(--font);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 5px 12px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  text-transform: lowercase;
+}
+
+.navbar-nav-btn:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+
+.navbar-nav-btn.active {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
 .navbar-logo {
   font-size: 1.0625rem;
   letter-spacing: 0.1em;
