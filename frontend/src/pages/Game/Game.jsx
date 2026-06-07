@@ -4,37 +4,14 @@ import Editor from '@monaco-editor/react';
 import ReactMarkdown from 'react-markdown';
 import { JavaOriginal } from 'devicons-react';
 import { AppContext } from '../../context/AppContext';
-import { fetchGame, submitGameSolution, finishGame, sendChatMessage } from '../../game/api';
+import { fetchGame, submitGameSolution, finishGame, sendChatMessage, gql } from '../../game/api';
 import { subscribeGame } from '../../game/socket';
 import Spinner from '../../components/Spinner/Spinner';
+import { TEAM_COLORS, STATUS_COLOR, PASS_QUIPS, formatTime as formatChatTime } from '../../utils/constants';
 import './Game.css';
 import '../Practice/Practice.css';
 
-const TEAM_COLORS = [
-    'var(--accent)',
-    'var(--diff-easy)',
-    'var(--diff-medium)',
-    'var(--diff-hard)',
-    '#a78bfa',
-];
 const teamColor = (idx) => TEAM_COLORS[idx % TEAM_COLORS.length];
-
-const formatChatTime = (ts) => {
-    const d = new Date(ts);
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-};
-
-const STATUS_COLOR = {
-    PASSED: 'var(--success)',
-    TESTS_FAILED: 'var(--error)',
-    COMPILE_ERROR: 'var(--error)',
-    RUNTIME_ERROR: 'var(--error)',
-    TIMEOUT: 'var(--error)',
-    INVALID_SUBMISSION: 'var(--text-muted)',
-    SYSTEM_ERROR: 'var(--text-muted)',
-};
-
-const PASS_QUIPS = ['clean run.', 'all tests green.', 'no failures.', 'looking good.', 'nice work.', 'ship it.', 'flawless.'];
 
 const parseRunTime = (stdout) => {
     const m = stdout?.match(/Test run finished after (\d+) ms/);
@@ -70,8 +47,6 @@ const ResultPanel = ({ result }) => {
         </div>
     );
 };
-
-const GRAPHQL_URL = 'http://localhost:8080/graphql';
 
 const Game = () => {
     const { gameId } = useParams();
@@ -252,30 +227,17 @@ const Game = () => {
             const newTemplates = {};
             for (const gp of game.problems) {
                 if (descs[gp.problem.id] !== undefined) continue;
-                const r = await fetch(GRAPHQL_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ query: `{ problemById(id: "${gp.problem.id}") { files { filePath fileRole } } }` }),
-                });
-                const d = await r.json();
-                const files = d.data?.problemById?.files ?? [];
+                const d = await gql(token, `query($id:ID!){problemById(id:$id){files{filePath fileRole}}}`, { id: gp.problem.id });
+                const files = d.problemById?.files ?? [];
                 const desc = files.find(f => f.fileRole === 'DESCRIPTION');
                 const tpl = files.find(f => f.fileRole === 'TEMPLATE');
                 if (desc) {
-                    const c = await fetch(GRAPHQL_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ query: `{ fileContent(path: "${desc.filePath}") }` }),
-                    });
-                    newDescs[gp.problem.id] = (await c.json()).data?.fileContent ?? '';
+                    const c = await gql(token, `query($p:String!){fileContent(path:$p)}`, { p: desc.filePath });
+                    newDescs[gp.problem.id] = c.fileContent ?? '';
                 }
                 if (tpl) {
-                    const c = await fetch(GRAPHQL_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ query: `{ fileContent(path: "${tpl.filePath}") }` }),
-                    });
-                    newTemplates[gp.problem.id] = (await c.json()).data?.fileContent ?? '';
+                    const c = await gql(token, `query($p:String!){fileContent(path:$p)}`, { p: tpl.filePath });
+                    newTemplates[gp.problem.id] = c.fileContent ?? '';
                 }
             }
             if (Object.keys(newDescs).length) setDescs(prev => ({ ...prev, ...newDescs }));

@@ -6,27 +6,9 @@ import { JavaOriginal } from 'devicons-react';
 import { AppContext } from '../../context/AppContext';
 import Spinner from '../../components/Spinner/Spinner';
 import CodeBlock from '../../components/CodeBlock/CodeBlock';
+import { gql } from '../../game/api';
+import { STATUS_COLOR, PASS_QUIPS } from '../../utils/constants';
 import './Practice.css';
-
-const STATUS_COLOR = {
-    PASSED: 'var(--success)',
-    TESTS_FAILED: 'var(--error)',
-    COMPILE_ERROR: 'var(--error)',
-    RUNTIME_ERROR: 'var(--error)',
-    TIMEOUT: 'var(--error)',
-    INVALID_SUBMISSION: 'var(--text-muted)',
-    SYSTEM_ERROR: 'var(--text-muted)',
-};
-
-const PASS_QUIPS = [
-    'clean run.',
-    'all tests green.',
-    'no failures.',
-    'looking good.',
-    'nice work.',
-    'ship it.',
-    'flawless.',
-];
 
 const parseRunTime = (stdout) => {
     const match = stdout?.match(/Test run finished after (\d+) ms/);
@@ -110,11 +92,8 @@ const PracticePage = () => {
     useEffect(() => {
         if (activeTab !== 'solutions' || !isSolved || !currentProblem?.id || !token) return;
         if (commSolutions !== null) return; // already loaded for this problem
-        fetch('http://localhost:8080/graphql', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ query: `query($id:ID!){passedSubmissionsByProblem(problemId:$id){id code createdAt user{id username avatarBase64}}}`, variables: { id: currentProblem.id } }),
-        }).then(r => r.json()).then(d => setCommSolutions(d.data?.passedSubmissionsByProblem ?? []));
+        gql(token, `query($id:ID!){passedSubmissionsByProblem(problemId:$id){id code createdAt user{id username avatarBase64}}}`, { id: currentProblem.id })
+            .then(d => setCommSolutions(d.passedSubmissionsByProblem ?? []));
     }, [activeTab, isSolved, currentProblem?.id, token, commSolutions]);
 
     // Reset community solutions when problem changes

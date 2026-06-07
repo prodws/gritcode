@@ -2,7 +2,8 @@ import React, { useContext, useEffect, useState, useCallback, useRef } from 'rea
 import { useNavigate, Link } from 'react-router-dom';
 import { Copy, Plus, Crown, Users, User, ListChecks, Timer, Tag, LogOut, ChevronRight, Info } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
-import { fetchGame, switchTeam, leaveGame, startGame, updateGameSettings, sendChatMessage } from '../../game/api';
+import { fetchGame, switchTeam, leaveGame, startGame, updateGameSettings, sendChatMessage, GRAPHQL_URL } from '../../game/api';
+import { TEAM_COLORS, teamColor, formatTime } from '../../utils/constants';
 import { subscribeGame } from '../../game/socket';
 import './Lobby.css';
 
@@ -143,15 +144,6 @@ const parseCommand = (raw) => {
 
 /* ---------- Teams ---------- */
 
-const TEAM_COLORS = [
-    'var(--accent)',     // team 0 — blue (matches theme accent)
-    'var(--diff-easy)',  // team 1 — green
-    'var(--diff-medium)',// team 2 — amber
-    'var(--diff-hard)',  // team 3 — red/cherry
-    '#a78bfa',           // team 4 — purple (fallback for theme-neutral 5th color)
-];
-
-const teamColor = (idx) => TEAM_COLORS[idx % TEAM_COLORS.length];
 
 const TeamList = ({ teams, maxPlayers, currentUserId, hostId, onJoin }) => {
     const { rendered, leaving } = useDeferredRemoval(teams, t => t.id, 350);
@@ -267,10 +259,6 @@ const TopBar = ({ game, copied, onCopyCode, onLeave, isHost, settings }) => {
 
 /* ---------- Activity log ---------- */
 
-const formatTime = (ts) => {
-    const d = new Date(ts);
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-};
 
 const COMMAND_REFERENCE_HOST = [
     { cmd: '/teams N',   desc: 'set the number of teams (2–5)' },
@@ -557,7 +545,7 @@ const LobbyView = ({ gameId, onLeave }) => {
                 query: `mutation($g: ID!) { leaveGame(gameId: $g) { id } }`,
                 variables: { g: gameId },
             });
-            fetch('http://localhost:8080/graphql', {
+            fetch(GRAPHQL_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body,

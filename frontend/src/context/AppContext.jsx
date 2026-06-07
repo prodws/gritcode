@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { validateUsername, validateEmail, validatePassword } from '../utils/validation';
+import { GRAPHQL_URL, gql } from '../game/api';
 
 export const AppContext = createContext();
 
@@ -68,7 +69,6 @@ export const AppProvider = ({ children }) => {
         return () => clearTimeout(t);
     }, [toast]);
 
-    // Logic
     const clearError = useCallback(() => setError({ field: null, message: null }), []);
     const clearSuccess = useCallback(() => setSuccess({ field: null, message: null }), []);
     const goHome = useCallback(() => navigate('/'), [navigate]);
@@ -80,10 +80,13 @@ export const AppProvider = ({ children }) => {
 
     const login = (emailOrUsername, password) => {
         clearError();
-        fetch('http://localhost:8080/graphql', {
+        fetch(GRAPHQL_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: `mutation { login(emailOrUsername: "${emailOrUsername}", password: "${password}") }` }),
+            body: JSON.stringify({
+                query: `mutation($u: String!, $p: String!) { login(emailOrUsername: $u, password: $p) }`,
+                variables: { u: emailOrUsername, p: password },
+            }),
         })
         .then(res => res.json())
         .then(json => {
@@ -91,15 +94,9 @@ export const AppProvider = ({ children }) => {
             const token = json.data.login;
             setToken(token);
             localStorage.setItem('token', token);
-            fetch('http://localhost:8080/graphql', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ query: `{ me { id username totalPoints createdAt avatarBase64 level xpForNextLevel } }` }),
-            })
-            .then(res => res.json())
-            .then(userData => {
-                if(userData.data?.me) { setCurrentUser(userData.data.me); goHome(); }
-            });
+            gql(token, `{ me { id username totalPoints createdAt avatarBase64 level xpForNextLevel } }`)
+                .then(d => { if (d.me) { setCurrentUser(d.me); goHome(); } })
+                .catch(() => {});
         });
     };
 
@@ -107,32 +104,25 @@ export const AppProvider = ({ children }) => {
         clearError();
 
         const usernameError = validateUsername(username);
-        if (usernameError) {
-            setError({ field: 'username', message: usernameError });
-            return;
-        }
+        if (usernameError) { setError({ field: 'username', message: usernameError }); return; }
 
         const emailError = validateEmail(email);
-        if (emailError) {
-            setError({ field: 'email', message: emailError });
-            return;
-        }
+        if (emailError) { setError({ field: 'email', message: emailError }); return; }
 
         const passwordError = validatePassword(password);
-        if (passwordError) {
-            setError({ field: 'password', message: passwordError });
-            return;
-        }
+        if (passwordError) { setError({ field: 'password', message: passwordError }); return; }
 
-        fetch('http://localhost:8080/graphql', {
+        fetch(GRAPHQL_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: `mutation { register(username: "${username}", email: "${email}", password: "${password}") { id } }` }),
+            body: JSON.stringify({
+                query: `mutation($u: String!, $e: String!, $p: String!) { register(username: $u, email: $e, password: $p) { id } }`,
+                variables: { u: username, e: email, p: password },
+            }),
         })
         .then(res => res.json())
         .then(json => {
             if (json.errors) {
-                // Handle server-side validation errors (e.g., username taken)
                 const errorMessage = json.errors[0].message;
                 if (errorMessage.includes('username')) {
                     setError({ field: 'username', message: errorMessage });
@@ -147,6 +137,7 @@ export const AppProvider = ({ children }) => {
             navigate('/auth');
         });
     };
+
     const clearFieldState = useCallback((field) => {
         setAvailability(prev => ({ ...prev, [field]: undefined }));
         setError(prev => prev.field === field ? { field: null, message: null } : prev);
@@ -162,11 +153,13 @@ export const AppProvider = ({ children }) => {
             return;
         }
 
-        const query = `query { checkAvailability(field: "${field}", value: "${value}") }`;
-        const response = await fetch('http://localhost:8080/graphql', {
+        const response = await fetch(GRAPHQL_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query }),
+            body: JSON.stringify({
+                query: `query($f: String!, $v: String!) { checkAvailability(field: $f, value: $v) }`,
+                variables: { f: field, v: value },
+            }),
         });
         const result = await response.json();
         const isAvailable = result.data?.checkAvailability;
@@ -182,50 +175,30 @@ export const AppProvider = ({ children }) => {
 
     const handleSaveUsername = useCallback(async (newUsername) => {
         clearError(); clearSuccess();
-        const res = await fetch('http://localhost:8080/graphql', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ query: `mutation { updateUsername(newUsername: ${JSON.stringify(newUsername)}) { id username } }` }),
-        }).then(r => r.json());
-        if (res.errors) {
-            setError({ field: 'username', message: res.errors[0].message });
-        } else {
-            setCurrentUser(prev => ({ ...prev, username: res.data.updateUsername.username }));
+        try {
+            const d = await gql(token, `mutation($u: String!) { updateUsername(newUsername: $u) { id username } }`, { u: newUsername });
+            setCurrentUser(prev => ({ ...prev, username: d.updateUsername.username }));
             setSuccess({ field: 'username', message: 'Username updated' });
+        } catch (err) {
+            setError({ field: 'username', message: err.message });
         }
     }, [token, clearError, clearSuccess]);
 
     const handleSavePassword = useCallback(async (currentPassword, newPassword) => {
         clearError(); clearSuccess();
-        const res = await fetch('http://localhost:8080/graphql', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ query: `mutation { updatePassword(currentPassword: ${JSON.stringify(currentPassword)}, newPassword: ${JSON.stringify(newPassword)}) { id } }` }),
-        }).then(r => r.json());
-        if (res.errors) {
-            const msg = res.errors[0].message;
-            setError({ field: 'password', message: msg });
-            throw new Error(msg);
-        } else {
+        try {
+            await gql(token, `mutation($c: String!, $n: String!) { updatePassword(currentPassword: $c, newPassword: $n) { id } }`, { c: currentPassword, n: newPassword });
             setSuccess({ field: 'password', message: 'Password updated' });
+        } catch (err) {
+            setError({ field: 'password', message: err.message });
+            throw err;
         }
     }, [token, clearError, clearSuccess]);
 
     const handleSaveAvatar = useCallback(async (base64Data) => {
-        const res = await fetch('http://localhost:8080/graphql', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ query: `mutation { updateAvatar(base64Data: ${JSON.stringify(base64Data)}) { id avatarBase64 } }` }),
-        }).then(r => r.json());
-        if (res.errors) throw new Error(res.errors[0].message);
-        setCurrentUser(prev => ({ ...prev, avatarBase64: res.data.updateAvatar.avatarBase64 }));
+        const d = await gql(token, `mutation($b: String!) { updateAvatar(base64Data: $b) { id avatarBase64 } }`, { b: base64Data });
+        setCurrentUser(prev => ({ ...prev, avatarBase64: d.updateAvatar.avatarBase64 }));
     }, [token]);
-
-    // kept for backwards compat
-    const handleSaveSettings = useCallback(async (newUsername, newPassword) => {
-        if (newUsername) await handleSaveUsername(newUsername);
-        if (newPassword) await handleSavePassword('', newPassword);
-    }, [handleSaveUsername, handleSavePassword]);
 
     const logout = useCallback(() => {
         setToken(null);
@@ -235,11 +208,7 @@ export const AppProvider = ({ children }) => {
     }, [goHome]);
 
     const deleteAccount = useCallback(async () => {
-        await fetch('http://localhost:8080/graphql', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ query: `mutation { deleteAccount }` }),
-        });
+        await gql(token, `mutation { deleteAccount }`);
         setToken(null);
         setCurrentUser(null);
         localStorage.removeItem('token');
@@ -248,12 +217,8 @@ export const AppProvider = ({ children }) => {
 
     const loadProblem = useCallback(async (problem) => {
         const fetchFile = async (path) => {
-            const r = await fetch('http://localhost:8080/graphql', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ query: `{ fileContent(path: "${path}") }` }),
-            });
-            return (await r.json()).data?.fileContent ?? '';
+            const d = await gql(token, `query($p: String!) { fileContent(path: $p) }`, { p: path });
+            return d.fileContent ?? '';
         };
         const descFile = problem.files.find(f => f.fileRole === 'DESCRIPTION');
         const templateFile = problem.files.find(f => f.fileRole === 'TEMPLATE');
@@ -270,13 +235,8 @@ export const AppProvider = ({ children }) => {
     }, [navigate]);
 
     const goPracticeById = useCallback(async (id) => {
-        const res = await fetch('http://localhost:8080/graphql', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ query: `{ problemById(id: "${id}") { id title difficulty type files { filePath fileName fileRole } } }` }),
-        });
-        const data = await res.json();
-        const problem = data.data?.problemById;
+        const d = await gql(token, `query($id: ID!) { problemById(id: $id) { id title difficulty type files { filePath fileName fileRole } } }`, { id });
+        const problem = d.problemById;
         if (!problem) return;
         await loadProblem(problem);
     }, [token, loadProblem]);
@@ -284,42 +244,35 @@ export const AppProvider = ({ children }) => {
     const handleSubmit = useCallback(async () => {
         if (!currentUser || !currentProblem) return;
         setSubmissionLoading(true);
-        const res = await fetch('http://localhost:8080/graphql', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({
-                query: `mutation { submitSolution(input: { userId: "${currentUser.id}", problemId: "${currentProblem.id}", solutionCode: ${JSON.stringify(editorContent)} }) { id status passed stdout stderr } }`,
-            }),
-        });
-        const data = await res.json();
-        if (data.data?.submitSolution) setSubmissionResult(data.data.submitSolution);
-        setSubmissionLoading(false);
+        try {
+            const d = await gql(token,
+                `mutation($input: SubmitSolutionInput!) { submitSolution(input: $input) { id status passed stdout stderr } }`,
+                { input: { userId: currentUser.id, problemId: currentProblem.id, solutionCode: editorContent } }
+            );
+            if (d.submitSolution) setSubmissionResult(d.submitSolution);
+        } finally {
+            setSubmissionLoading(false);
+        }
     }, [token, currentUser, currentProblem, editorContent]);
 
     const handleRun = useCallback(async () => {
         if (!currentUser || !currentProblem) return;
         setSubmissionLoading(true);
-        const res = await fetch('http://localhost:8080/graphql', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({
-                query: `mutation { runSolution(input: { userId: "${currentUser.id}", problemId: "${currentProblem.id}", solutionCode: ${JSON.stringify(editorContent)} }) { status passed stdout stderr } }`,
-            }),
-        });
-        const data = await res.json();
-        if (data.data?.runSolution) setSubmissionResult(data.data.runSolution);
-        setSubmissionLoading(false);
+        try {
+            const d = await gql(token,
+                `mutation($input: SubmitSolutionInput!) { runSolution(input: $input) { status passed stdout stderr } }`,
+                { input: { userId: currentUser.id, problemId: currentProblem.id, solutionCode: editorContent } }
+            );
+            if (d.runSolution) setSubmissionResult(d.runSolution);
+        } finally {
+            setSubmissionLoading(false);
+        }
     }, [token, currentUser, currentProblem, editorContent]);
 
     const fetchSubmissions = useCallback(async () => {
         if (!token) return;
-        const res = await fetch('http://localhost:8080/graphql', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ query: `{ mySubmissions { id status passed code createdAt problem { id title difficulty } } }` }),
-        });
-        const data = await res.json();
-        if (data.data?.mySubmissions) setSubmissions(data.data.mySubmissions);
+        const d = await gql(token, `{ mySubmissions { id status passed code createdAt problem { id title difficulty } } }`);
+        if (d.mySubmissions) setSubmissions(d.mySubmissions);
     }, [token]);
 
     const toggleTheme = useCallback(() => {
@@ -341,16 +294,10 @@ export const AppProvider = ({ children }) => {
     useEffect(() => {
         const savedToken = localStorage.getItem('token');
         if (savedToken) {
-            fetch('http://localhost:8080/graphql', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${savedToken}` },
-                body: JSON.stringify({ query: `{ me { id username totalPoints createdAt avatarBase64 level xpForNextLevel } }` }),
-            })
-            .then(res => res.json())
-            .then(userData => {
-                if (userData.data?.me) setCurrentUser(userData.data.me);
-            })
-            .finally(() => setTimeout(() => setAuthLoading(false), 600));
+            gql(savedToken, `{ me { id username totalPoints createdAt avatarBase64 level xpForNextLevel } }`)
+                .then(d => { if (d.me) setCurrentUser(d.me); })
+                .catch(() => {})
+                .finally(() => setTimeout(() => setAuthLoading(false), 600));
         } else {
             setTimeout(() => setAuthLoading(false), 600);
         }
@@ -372,7 +319,6 @@ export const AppProvider = ({ children }) => {
         error,
         clearError,
         success,
-        handleSaveSettings,
         availability,
         checkAvailability,
         clearFieldState,

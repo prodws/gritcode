@@ -1,4 +1,4 @@
-const GRAPHQL_URL = 'http://localhost:8080/graphql';
+export const GRAPHQL_URL = 'http://localhost:8080/graphql';
 
 const GAME_FRAGMENT = `
     id
@@ -32,7 +32,7 @@ const GAME_FRAGMENT = `
     }
 `;
 
-const gql = async (token, query, variables) => {
+export const gql = async (token, query, variables) => {
     const res = await fetch(GRAPHQL_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },

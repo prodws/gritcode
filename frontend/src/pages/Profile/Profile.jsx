@@ -1,9 +1,10 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation, useParams, Link } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
-import { myActiveGames, myFinishedGames } from '../../game/api';
+import { myActiveGames, myFinishedGames, gql } from '../../game/api';
 import { validateUsername, validatePassword } from '../../utils/validation';
 import PasswordRules from '../../components/PasswordRules/PasswordRules';
+import { Eye, EyeClosed } from 'lucide-react';
 import './Profile.css';
 
 const DIFF_COLOR = { EASY: 'var(--diff-easy)', MEDIUM: 'var(--diff-medium)', HARD: 'var(--diff-hard)' };
@@ -13,8 +14,6 @@ const STATUS_LABEL = {
     PASSED: 'passed', TESTS_FAILED: 'failed', COMPILE_ERROR: 'failed',
     RUNTIME_ERROR: 'failed', TIMEOUT: 'failed', INVALID_SUBMISSION: 'failed', SYSTEM_ERROR: 'failed',
 };
-
-const TEAM_COLORS = ['var(--accent)', '#e05c5c', '#5cb85c', '#e0a85c', '#a78bfa'];
 
 const DiffStars = ({ difficulty }) => (
     <span className="prof-diff-stars">
@@ -47,11 +46,6 @@ const fmtDate = (iso) => {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
-const gql = (token, query, variables) => fetch('http://localhost:8080/graphql', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-    body: JSON.stringify({ query, variables }),
-}).then(r => r.json());
 
 /* ---------- Level progress bar ---------- */
 const LevelBar = ({ xp, level, xpForNextLevel }) => {
@@ -82,7 +76,6 @@ const Avatar = ({ user, size = 64, editable = false, onUpload }) => {
     const handleFile = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        if (file.size > 512 * 1024) { alert('Image must be smaller than 512 KB'); return; }
         if (!file.type.startsWith('image/')) { alert('File must be an image'); return; }
         setUploading(true);
         const reader = new FileReader();
@@ -144,7 +137,7 @@ const SettingsPanel = () => {
             clearTimeout(debounceRef.current);
             debounceRef.current = setTimeout(async () => {
                 const res = await gql(token, `query($v:String!){checkAvailability(field:"username",value:$v)}`, { v: val });
-                const avail = res.data?.checkAvailability;
+                const avail = res.checkAvailability;
                 setUsernameAvail(avail);
                 if (avail === false) setUsernameErr('Username already taken');
                 else if (avail === true) setUsernameOk(true);
@@ -192,9 +185,6 @@ const SettingsPanel = () => {
                 <p className="prof-settings-label">profile picture</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <Avatar user={currentUser} size={64} editable onUpload={handleSaveAvatar} />
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-                        jpeg or png, max 512 kb
-                    </p>
                 </div>
             </div>
 
@@ -236,7 +226,7 @@ const SettingsPanel = () => {
                             autoComplete="current-password"
                         />
                         <button type="button" className="password-toggle" onMouseDown={e => e.preventDefault()} onClick={() => setShowCurrentPw(v => !v)}>
-                            {showCurrentPw ? '✶' : '✧'}
+                            {showCurrentPw ? <Eye size={14} /> : <EyeClosed size={14} />}
                         </button>
                     </div>
                     <div className="prof-settings-pw-wrap">
@@ -250,7 +240,7 @@ const SettingsPanel = () => {
                             autoComplete="new-password"
                         />
                         <button type="button" className="password-toggle" onMouseDown={e => e.preventDefault()} onClick={() => setShowNewPw(v => !v)}>
-                            {showNewPw ? '✶' : '✧'}
+                            {showNewPw ? <Eye size={14} /> : <EyeClosed size={14} />}
                         </button>
                     </div>
                     <PasswordRules password={newPw} key={newPw} />
@@ -468,10 +458,9 @@ const OverviewPanel = ({ submissions, allProblems, games, activeGames, currentUs
 };
 
 /* ---------- Follow button ---------- */
-const FollowButton = ({ token, username, isSelf }) => {
+const FollowButton = ({ token, username, isSelf, onToggle }) => {
     const [following, setFollowing] = useState(null);
     const [followers, setFollowers] = useState(0);
-    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (isSelf || !token || !username) return;
@@ -479,26 +468,25 @@ const FollowButton = ({ token, username, isSelf }) => {
             gql(token, `query($u:String!){isFollowing(targetUsername:$u)}`, { u: username }),
             gql(token, `query($u:String!){followerCount(username:$u)}`, { u: username }),
         ]).then(([fr, cr]) => {
-            setFollowing(fr.data?.isFollowing ?? false);
-            setFollowers(cr.data?.followerCount ?? 0);
-            setLoading(false);
+            setFollowing(fr.isFollowing ?? false);
+            setFollowers(cr.followerCount ?? 0);
         });
     }, [token, username, isSelf]);
 
-    const toggle = async () => {
-        setLoading(true);
+    const toggle = () => {
+        const nowFollowing = !following;
         const mutation = following ? 'unfollowUser' : 'followUser';
-        await gql(token, `mutation($u:String!){${mutation}(username:$u)}`, { u: username });
-        setFollowing(f => !f);
-        setFollowers(c => following ? c - 1 : c + 1);
-        setLoading(false);
+        setFollowing(nowFollowing);
+        setFollowers(c => nowFollowing ? c + 1 : c - 1);
+        onToggle?.(nowFollowing);
+        gql(token, `mutation($u:String!){${mutation}(username:$u)}`, { u: username });
     };
 
-    if (isSelf || loading) return null;
+    if (isSelf || following === null) return null;
 
     return (
         <div className="prof-follow-row">
-            <button className={`prof-follow-btn${following ? ' following' : ''}`} onClick={toggle} disabled={loading}>
+            <button className={`prof-follow-btn${following ? ' following' : ''}`} onClick={toggle}>
                 {following ? 'following' : 'follow'}
             </button>
             <span className="prof-follow-count">
@@ -510,19 +498,27 @@ const FollowButton = ({ token, username, isSelf }) => {
 };
 
 /* ---------- Follower avatars ---------- */
-const FollowerAvatars = ({ token, username }) => {
+const FollowerAvatars = ({ token, username, currentUser, optimisticUser }) => {
     const [followers, setFollowers] = useState([]);
 
     useEffect(() => {
         if (!token || !username) return;
         gql(token, `query($u:String!){followers(username:$u){id username avatarBase64}}`, { u: username })
-            .then(d => setFollowers(d.data?.followers ?? []));
+            .then(d => setFollowers(d.followers ?? []));
     }, [token, username]);
 
-    if (followers.length === 0) return null;
+    const displayed = optimisticUser
+        ? optimisticUser.following
+            ? followers.some(f => f.id === currentUser?.id)
+                ? followers
+                : [...followers, currentUser]
+            : followers.filter(f => f.id !== currentUser?.id)
+        : followers;
+
+    if (displayed.length === 0) return null;
     return (
         <div className="prof-follower-avatars">
-            {followers.map(f => (
+            {displayed.map(f => (
                 <Link key={f.id} to={`/users/${f.username}`} className="prof-follower-avatar" title={f.username}>
                     {f.avatarBase64
                         ? <img src={f.avatarBase64} alt={f.username} />
@@ -550,6 +546,7 @@ const ProfilePage = () => {
     }, [username, currentUser, navigate]);
 
     const [tab, setTab] = useState(() => new URLSearchParams(location.search).get('tab') || 'overview');
+    const [optimisticFollow, setOptimisticFollow] = useState(null);
     const [allProblems, setAllProblems] = useState([]);
     const [games, setGames] = useState([]);
     const [activeGames, setActiveGames] = useState([]);
@@ -582,11 +579,11 @@ const ProfilePage = () => {
             gql(token, `query($u:String!){submissionsByUsername(username:$u){id status passed createdAt problem{id title difficulty}}}`, { u: username }),
             gql(token, `{myFinishedGames{id endedAt createdAt timeLimitSeconds teams{id teamName score isWinner players{id player{id username avatarBase64}status}}}}`),
         ]).then(([ud, sd, gd]) => {
-            const u = ud.data?.userByUsername ?? null;
+            const u = ud.userByUsername ?? null;
             setOtherUser(u);
-            setOtherSubmissions(sd.data?.submissionsByUsername ?? []);
+            setOtherSubmissions(sd.submissionsByUsername ?? []);
             const uid = u?.id;
-            const allG = gd.data?.myFinishedGames ?? [];
+            const allG = gd.myFinishedGames ?? [];
             setOtherGames(allG.filter(g => g.teams.some(t => t.players.some(p => p.player.id === uid))));
         }).finally(() => setLoading(false));
     }, [token, username, isSelf]);
@@ -594,7 +591,7 @@ const ProfilePage = () => {
     useEffect(() => {
         if (!token) return;
         gql(token, `{problems{id difficulty type}}`)
-            .then(d => setAllProblems((d.data?.problems ?? []).filter(p => p.type === 'CODING')));
+            .then(d => setAllProblems((d.problems ?? []).filter(p => p.type === 'CODING')));
     }, [token]);
 
     const displayUser = isSelf ? currentUser : otherUser;
@@ -623,8 +620,8 @@ const ProfilePage = () => {
                     <p className="profile-username">{displayUser?.username}</p>
                     <LevelBar xp={xp} level={level} xpForNextLevel={xpForNextLevel} />
                     {joined && <p className="profile-joined">joined {joined}</p>}
-                    <FollowButton token={token} username={displayUser?.username} isSelf={isSelf} />
-                    <FollowerAvatars token={token} username={displayUser?.username} />
+                    <FollowButton token={token} username={displayUser?.username} isSelf={isSelf} onToggle={(nowFollowing) => setOptimisticFollow({ following: nowFollowing })} />
+                    <FollowerAvatars token={token} username={displayUser?.username} currentUser={currentUser} optimisticUser={optimisticFollow} />
                     <nav className="profile-nav">
                         {tabs.map(t => (
                             <button key={t.id} className={`profile-nav-item${tab === t.id ? ' active' : ''}`} onClick={() => setTab(t.id)}>
