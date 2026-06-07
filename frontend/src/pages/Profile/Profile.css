@@ -197,6 +197,12 @@
     flex-shrink: 0;
     opacity: 0.85;
     transition: opacity 0.15s;
+    animation: avatar-in 0.35s ease;
+}
+
+@keyframes avatar-in {
+    from { opacity: 0; transform: scale(0.6); }
+    to   { opacity: 0.85; transform: scale(1); }
 }
 
 .prof-follower-avatar:hover {

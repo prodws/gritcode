@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
 import { validateUsername, validateEmail, validatePassword } from '../../utils/validation';
 import PasswordRules from '../../components/PasswordRules/PasswordRules';
+import { Eye, EyeClosed } from 'lucide-react';
 import './Auth.css';
 
 const useDebounce = (value, delay) => {
@@ -168,7 +169,7 @@ const AuthPage = () => {
                                 className={isRegister ? getInputClass('password', password) : (submitted && !password ? 'error' : '')}
                             />
                             <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
-                                {showPassword ? '✶' : '✧'}
+                                {showPassword ? <Eye size={14} /> : <EyeClosed size={14} />}
                             </button>
                         </div>
                         {isRegister && <PasswordRules password={password} />}

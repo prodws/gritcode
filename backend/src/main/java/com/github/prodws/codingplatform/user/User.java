@@ -44,6 +44,7 @@ public class User {
     @Column(columnDefinition = "TEXT")
     private String avatarBase64;
 
+
     @ManyToMany
     @JoinTable(
         name = "user_follows",
