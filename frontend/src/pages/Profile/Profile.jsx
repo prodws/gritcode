@@ -3,14 +3,15 @@ import { useNavigate, useLocation, useParams, Link } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
 import { myActiveGames, myFinishedGames } from '../../game/api';
 import { validateUsername, validatePassword } from '../../utils/validation';
+import PasswordRules from '../../components/PasswordRules/PasswordRules';
 import './Profile.css';
 
 const DIFF_COLOR = { EASY: 'var(--diff-easy)', MEDIUM: 'var(--diff-medium)', HARD: 'var(--diff-hard)' };
 const DIFF_COUNT = { EASY: 1, MEDIUM: 2, HARD: 3 };
 
 const STATUS_LABEL = {
-    PASSED: 'passed', TESTS_FAILED: 'tests failed', COMPILE_ERROR: 'compile error',
-    RUNTIME_ERROR: 'runtime error', TIMEOUT: 'timeout', INVALID_SUBMISSION: 'invalid', SYSTEM_ERROR: 'system error',
+    PASSED: 'passed', TESTS_FAILED: 'failed', COMPILE_ERROR: 'failed',
+    RUNTIME_ERROR: 'failed', TIMEOUT: 'failed', INVALID_SUBMISSION: 'failed', SYSTEM_ERROR: 'failed',
 };
 
 const TEAM_COLORS = ['var(--accent)', '#e05c5c', '#5cb85c', '#e0a85c', '#a78bfa'];
@@ -111,7 +112,7 @@ const Avatar = ({ user, size = 64, editable = false, onUpload }) => {
 
 /* ---------- Settings panel ---------- */
 const SettingsPanel = () => {
-    const { token, currentUser, handleSaveUsername, handleSavePassword, handleSaveAvatar } = useContext(AppContext);
+    const { token, currentUser, handleSaveUsername, handleSavePassword, handleSaveAvatar, showConfirm, deleteAccount } = useContext(AppContext);
 
     // Username section
     const [newUsername, setNewUsername] = useState('');
@@ -124,11 +125,11 @@ const SettingsPanel = () => {
     // Password section
     const [currentPw, setCurrentPw] = useState('');
     const [newPw, setNewPw] = useState('');
-    const [confirmPw, setConfirmPw] = useState('');
     const [pwErr, setPwErr] = useState('');
     const [pwSuccess, setPwSuccess] = useState('');
     const [pwSaving, setPwSaving] = useState(false);
-    const [showPw, setShowPw] = useState(false);
+    const [showCurrentPw, setShowCurrentPw] = useState(false);
+    const [showNewPw, setShowNewPw] = useState(false);
 
     const debounceRef = useRef(null);
 
@@ -172,11 +173,10 @@ const SettingsPanel = () => {
         if (!currentPw) { setPwErr('Enter your current password'); return; }
         const err = validatePassword(newPw);
         if (err) { setPwErr(err); return; }
-        if (newPw !== confirmPw) { setPwErr('Passwords do not match'); return; }
         setPwSaving(true);
         try {
             await handleSavePassword(currentPw, newPw);
-            setCurrentPw(''); setNewPw(''); setConfirmPw('');
+            setCurrentPw(''); setNewPw('');
             setPwSuccess('Password updated');
             setTimeout(() => setPwSuccess(''), 2000);
         } catch (err) {
@@ -184,12 +184,6 @@ const SettingsPanel = () => {
         } finally { setPwSaving(false); }
     };
 
-    const pwRules = [
-        { label: '8+ characters', ok: newPw.length >= 8 },
-        { label: 'a letter', ok: /[a-zA-Z]/.test(newPw) },
-        { label: 'a number', ok: /[0-9]/.test(newPw) },
-        { label: 'a special character', ok: /[^a-zA-Z0-9]/.test(newPw) },
-    ];
 
     return (
         <div className="prof-settings">
@@ -231,100 +225,49 @@ const SettingsPanel = () => {
             <form className="prof-settings-section" onSubmit={onSavePassword}>
                 <p className="prof-settings-label">change password</p>
                 <div className="prof-settings-row">
-                    <input
-                        className="prof-settings-input"
-                        type={showPw ? 'text' : 'password'}
-                        placeholder="current password"
-                        value={currentPw}
-                        onChange={e => { setCurrentPw(e.target.value); setPwErr(''); }}
-                        autoComplete="current-password"
-                    />
-                    <div className="prof-settings-input-wrap">
+                    <div className="prof-settings-pw-wrap">
+                        <input
+                            className="prof-settings-input"
+                            type={showCurrentPw ? 'text' : 'password'}
+                            placeholder="current password"
+                            value={currentPw}
+                            onChange={e => { setCurrentPw(e.target.value); setPwErr(''); }}
+                            onBlur={() => setShowCurrentPw(false)}
+                            autoComplete="current-password"
+                        />
+                        <button type="button" className="password-toggle" onMouseDown={e => e.preventDefault()} onClick={() => setShowCurrentPw(v => !v)}>
+                            {showCurrentPw ? '✶' : '✧'}
+                        </button>
+                    </div>
+                    <div className="prof-settings-pw-wrap">
                         <input
                             className={`prof-settings-input${newPw && validatePassword(newPw) ? ' input-error' : newPw && !validatePassword(newPw) ? ' input-success' : ''}`}
-                            type={showPw ? 'text' : 'password'}
+                            type={showNewPw ? 'text' : 'password'}
                             placeholder="new password"
                             value={newPw}
                             onChange={e => { setNewPw(e.target.value); setPwErr(''); }}
+                            onBlur={() => setShowNewPw(false)}
                             autoComplete="new-password"
                         />
+                        <button type="button" className="password-toggle" onMouseDown={e => e.preventDefault()} onClick={() => setShowNewPw(v => !v)}>
+                            {showNewPw ? '✶' : '✧'}
+                        </button>
                     </div>
-                    <input
-                        className={`prof-settings-input${confirmPw && confirmPw !== newPw ? ' input-error' : confirmPw && confirmPw === newPw && !validatePassword(newPw) ? ' input-success' : ''}`}
-                        type={showPw ? 'text' : 'password'}
-                        placeholder="confirm new password"
-                        value={confirmPw}
-                        onChange={e => { setConfirmPw(e.target.value); setPwErr(''); }}
-                        autoComplete="new-password"
-                    />
-                    {newPw && (
-                        <div className="prof-pw-rules">
-                            {pwRules.map(r => (
-                                <span key={r.label} className={`prof-pw-rule ${r.ok ? 'ok' : 'fail'}`}>
-                                    {r.ok ? '✓' : '✗'} {r.label}
-                                </span>
-                            ))}
-                        </div>
-                    )}
+                    <PasswordRules password={newPw} key={newPw} />
                     {pwErr && <p className="prof-settings-error">{pwErr}</p>}
                     {pwSuccess && <p className="prof-settings-success">{pwSuccess}</p>}
-                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                        <button type="submit" className="prof-settings-save" disabled={pwSaving}>
-                            {pwSaving ? 'saving…' : 'update password'}
-                        </button>
-                        <button type="button" className="prof-settings-toggle" onClick={() => setShowPw(v => !v)}>
-                            {showPw ? 'hide' : 'show'}
-                        </button>
-                    </div>
+                    <button type="submit" className="prof-settings-save" disabled={pwSaving}>
+                        {pwSaving ? 'saving…' : 'update password'}
+                    </button>
                 </div>
             </form>
-        </div>
-    );
-};
 
-/* ---------- Achievements tab ---------- */
-const MOCK_ACHIEVEMENTS = [
-    { id: 'first_solve', icon: '⚡', title: 'First Blood', desc: 'Solve your first problem', unlocked: true },
-    { id: 'win_game', icon: '🏆', title: 'Champion', desc: 'Win a multiplayer game', unlocked: false },
-    { id: 'solve_10', icon: '📚', title: 'Grinder', desc: 'Solve 10 problems', unlocked: false },
-    { id: 'solve_hard', icon: '🔥', title: 'Hard Mode', desc: 'Solve a hard problem', unlocked: false },
-    { id: 'play_5', icon: '🎮', title: 'Regular', desc: 'Play 5 games', unlocked: false },
-    { id: 'fast_solve', icon: '⏱', title: 'Speed Demon', desc: 'Solve a problem in under 2 minutes', unlocked: false },
-];
-
-const AchievementsPanel = ({ submissions, games }) => {
-    const solvedCount = Object.values(
-        submissions.reduce((acc, s) => { if (s.passed && s.problem?.id) acc[s.problem.id] = true; return acc; }, {})
-    ).length;
-    const wonGame = games.some(g => g.teams.some(t => t.isWinner));
-    const solvedHard = submissions.some(s => s.passed && s.problem?.difficulty === 'HARD');
-    const playedGames = games.length;
-
-    const isUnlocked = (id) => {
-        switch (id) {
-            case 'first_solve': return solvedCount >= 1;
-            case 'win_game': return wonGame;
-            case 'solve_10': return solvedCount >= 10;
-            case 'solve_hard': return solvedHard;
-            case 'play_5': return playedGames >= 5;
-            default: return false;
-        }
-    };
-
-    return (
-        <div className="prof-achievements">
-            <div className="prof-achievements-note">achievements are coming soon — here's a preview of what's planned.</div>
-            <div className="prof-achievements-grid">
-                {MOCK_ACHIEVEMENTS.map(a => {
-                    const unlocked = isUnlocked(a.id);
-                    return (
-                        <div key={a.id} className={`prof-achievement${unlocked ? ' unlocked' : ''}`}>
-                            <span className="prof-achievement-icon">{a.icon}</span>
-                            <span className="prof-achievement-title">{a.title}</span>
-                            <span className="prof-achievement-desc">{a.desc}</span>
-                        </div>
-                    );
-                })}
+            {/* Danger zone */}
+            <div className="prof-settings-section prof-settings-danger">
+                <button className="prof-settings-delete" onClick={async () => {
+                    const ok = await showConfirm({ message: 'delete your account? this cannot be undone.', confirmLabel: 'delete' });
+                    if (ok) deleteAccount();
+                }}>delete account</button>
             </div>
         </div>
     );
@@ -337,13 +280,14 @@ const FeedItem = ({ item }) => {
     if (item.kind === 'problem') {
         const solved = item.status === 'PASSED';
         return (
-            <div className="feed-item">
+            <div className="feed-item feed-item-clickable" onClick={() => navigate(`/forge/${item.id}`)}>
                 <div className="feed-item-left">
                     <DiffStars difficulty={item.difficulty} />
                     <span className="feed-item-title">{item.title}</span>
                     <span className={`prof-badge ${solved ? 'badge-solved' : 'badge-attempted'}`}>
                         {solved ? 'solved' : (STATUS_LABEL[item.status] ?? 'attempted')}
                     </span>
+                    {item.xp != null && <span className="feed-item-score">+{item.xp} xp</span>}
                 </div>
                 <span className="feed-item-date">{fmtDate(item.ts)}</span>
             </div>
@@ -362,16 +306,19 @@ const FeedItem = ({ item }) => {
                             <React.Fragment key={gi}>
                                 {gi > 0 && <span className="feed-vs">vs</span>}
                                 {grp.players.map((p, pi) => (
-                                    <Link key={pi} to={`/profile/${p.username}`} className="feed-avatar"
-                                        style={{ background: grp.color }} onClick={e => e.stopPropagation()} title={p.username}>
-                                        {p.initial}
+                                    <Link key={pi} to={`/users/${p.username}`} className="feed-avatar"
+                                        style={p.avatarBase64 ? {} : { background: grp.color }} onClick={e => e.stopPropagation()} title={p.username}>
+                                        {p.avatarBase64
+                                            ? <img src={p.avatarBase64} alt={p.username} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                                            : p.initial
+                                        }
                                     </Link>
                                 ))}
                             </React.Fragment>
                         ))}
                     </span>
                     <span className={`games-verdict ${verdictClass}`}>{verdictText}</span>
-                    {item.score != null && <span className="feed-item-score">+{item.score} xp</span>}
+                    {item.score > 0 && <span className="feed-item-score">+{item.score} xp</span>}
                 </div>
                 <span className="feed-item-date">{fmtDate(item.ts)}</span>
             </div>
@@ -380,16 +327,23 @@ const FeedItem = ({ item }) => {
     return null;
 };
 
+const PRACTICE_XP = { EASY: 20, MEDIUM: 50, HARD: 100 };
+
 const buildFeed = (submissions, games, currentUserId) => {
     const items = [];
     const byProblem = {};
+    // Track the earliest passing submission per problem (first solve)
+    const firstSolve = {};
     for (const s of submissions) {
         const pid = s.problem?.id;
         if (!pid) continue;
         if (!byProblem[pid] || s.createdAt > byProblem[pid].createdAt) byProblem[pid] = s;
+        if (s.passed && (!firstSolve[pid] || s.createdAt < firstSolve[pid].createdAt)) firstSolve[pid] = s;
     }
     for (const s of Object.values(byProblem)) {
-        items.push({ kind: 'problem', id: s.problem.id, title: s.problem.title, difficulty: s.problem.difficulty, status: s.status, ts: s.createdAt });
+        const pid = s.problem.id;
+        const xp = (s.passed && firstSolve[pid]) ? (PRACTICE_XP[s.problem.difficulty] ?? null) : null;
+        items.push({ kind: 'problem', id: pid, title: s.problem.title, difficulty: s.problem.difficulty, status: s.status, ts: s.createdAt, xp });
     }
     for (const g of games) {
         const myTeam = g.teams.find(t => t.players.some(p => p.player.id === currentUserId));
@@ -397,9 +351,9 @@ const buildFeed = (submissions, games, currentUserId) => {
         const won = myTeam?.isWinner;
         const opponents = g.teams.filter(t => t.id !== myTeam?.id);
         const orderedTeams = myTeam ? [myTeam, ...opponents] : g.teams;
-        const teamGroups = orderedTeams.map((t, i) => ({
-            color: TEAM_COLORS[i % TEAM_COLORS.length],
-            players: t.players.map(p => ({ initial: p.player.username[0].toUpperCase(), username: p.player.username })),
+        const teamGroups = orderedTeams.map((t) => ({
+            color: 'var(--accent)',
+            players: t.players.map(p => ({ initial: p.player.username[0].toUpperCase(), username: p.player.username, avatarBase64: p.player.avatarBase64 })),
         }));
         items.push({
             kind: 'game', id: g.id,
@@ -460,7 +414,6 @@ const OverviewPanel = ({ submissions, allProblems, games, activeGames, currentUs
             </div>
 
             <div className="prof-section">
-                <p className="prof-section-title">activity · last 30 days</p>
                 <div className="activity-strip">
                     {activity.map((c, i) => {
                         const intensity = c === 0 ? 0 : 0.2 + (c / maxActivity) * 0.8;
@@ -474,25 +427,29 @@ const OverviewPanel = ({ submissions, allProblems, games, activeGames, currentUs
                 </div>
             </div>
 
-            {isSelf && activeGames.length > 0 && (
+            {isSelf && (
                 <div className="prof-section">
-                    <p className="prof-section-title">active games</p>
-                    <div className="prof-list">
-                        {activeGames.map(game => {
-                            const vs = game.teams.map(t => t.teamName).join(' vs ');
-                            const elapsed = game.startedAt ? Math.floor((Date.now() - new Date(game.startedAt)) / 1000) : 0;
-                            const remaining = Math.max(0, game.timeLimitSeconds - elapsed);
-                            const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
-                            const ss = String(remaining % 60).padStart(2, '0');
-                            return (
-                                <div key={game.id} className="prof-row prof-row-clickable" onClick={() => navigate(`/game/${game.id}`)}>
-                                    <span className="feed-item-tag" style={{ color: 'var(--accent)' }}>live</span>
-                                    <span className="prof-row-main">{vs}</span>
-                                    <span style={{ color: 'var(--accent)', fontVariantNumeric: 'tabular-nums', fontSize: '0.75rem' }}>{mm}:{ss}</span>
-                                </div>
-                            );
-                        })}
-                    </div>
+                    <p className="prof-section-title">wip</p>
+                    {activeGames.length === 0 ? (
+                        <div className="prof-empty">nothing in progress</div>
+                    ) : (
+                        <div className="prof-list">
+                            {activeGames.slice(0, 5).map(game => {
+                                const vs = game.teams.map(t => t.teamName).join(' vs ');
+                                const elapsed = game.startedAt ? Math.floor((Date.now() - new Date(game.startedAt)) / 1000) : 0;
+                                const remaining = Math.max(0, game.timeLimitSeconds - elapsed);
+                                const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
+                                const ss = String(remaining % 60).padStart(2, '0');
+                                return (
+                                    <div key={game.id} className="prof-row prof-row-clickable" onClick={() => navigate(`/game/${game.id}`)}>
+                                        <span className="feed-item-tag" style={{ color: 'var(--accent)' }}>live</span>
+                                        <span className="prof-row-main">{vs}</span>
+                                        <span style={{ color: 'var(--accent)', fontVariantNumeric: 'tabular-nums', fontSize: '0.75rem' }}>{mm}:{ss}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -544,7 +501,35 @@ const FollowButton = ({ token, username, isSelf }) => {
             <button className={`prof-follow-btn${following ? ' following' : ''}`} onClick={toggle} disabled={loading}>
                 {following ? 'following' : 'follow'}
             </button>
-            <span className="prof-follow-count">{followers} follower{followers !== 1 ? 's' : ''}</span>
+            <span className="prof-follow-count">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{opacity:0.55}}><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                {followers}
+            </span>
+        </div>
+    );
+};
+
+/* ---------- Follower avatars ---------- */
+const FollowerAvatars = ({ token, username }) => {
+    const [followers, setFollowers] = useState([]);
+
+    useEffect(() => {
+        if (!token || !username) return;
+        gql(token, `query($u:String!){followers(username:$u){id username avatarBase64}}`, { u: username })
+            .then(d => setFollowers(d.data?.followers ?? []));
+    }, [token, username]);
+
+    if (followers.length === 0) return null;
+    return (
+        <div className="prof-follower-avatars">
+            {followers.map(f => (
+                <Link key={f.id} to={`/users/${f.username}`} className="prof-follower-avatar" title={f.username}>
+                    {f.avatarBase64
+                        ? <img src={f.avatarBase64} alt={f.username} />
+                        : f.username[0].toUpperCase()
+                    }
+                </Link>
+            ))}
         </div>
     );
 };
@@ -552,9 +537,17 @@ const FollowButton = ({ token, username, isSelf }) => {
 /* ---------- Main ---------- */
 const ProfilePage = () => {
     const { token, currentUser, submissions, fetchSubmissions, handleSaveAvatar } = useContext(AppContext);
+    const navigate = useNavigate();
     const location = useLocation();
     const { username } = useParams();
     const isSelf = !username || username === currentUser?.username;
+
+    // Redirect /users → /users/:username so the URL is shareable
+    useEffect(() => {
+        if (!username && currentUser?.username) {
+            navigate(`/users/${currentUser.username}`, { replace: true });
+        }
+    }, [username, currentUser, navigate]);
 
     const [tab, setTab] = useState(() => new URLSearchParams(location.search).get('tab') || 'overview');
     const [allProblems, setAllProblems] = useState([]);
@@ -587,7 +580,7 @@ const ProfilePage = () => {
         Promise.all([
             gql(token, `query($u:String!){userByUsername(username:$u){id username totalPoints createdAt avatarBase64 level xpForNextLevel}}`, { u: username }),
             gql(token, `query($u:String!){submissionsByUsername(username:$u){id status passed createdAt problem{id title difficulty}}}`, { u: username }),
-            gql(token, `{myFinishedGames{id endedAt createdAt timeLimitSeconds teams{id teamName score isWinner players{id player{id username}status}}}}`),
+            gql(token, `{myFinishedGames{id endedAt createdAt timeLimitSeconds teams{id teamName score isWinner players{id player{id username avatarBase64}status}}}}`),
         ]).then(([ud, sd, gd]) => {
             const u = ud.data?.userByUsername ?? null;
             setOtherUser(u);
@@ -619,18 +612,19 @@ const ProfilePage = () => {
     if (!isSelf && !otherUser) return <div className="prof-loading">user not found</div>;
 
     const tabs = isSelf
-        ? [{ id: 'overview', label: 'overview' }, { id: 'achievements', label: 'achievements' }, { id: 'settings', label: 'settings' }]
-        : [{ id: 'overview', label: 'overview' }, { id: 'achievements', label: 'achievements' }];
+        ? [{ id: 'overview', label: 'overview' }, { id: 'settings', label: 'settings' }]
+        : [{ id: 'overview', label: 'overview' }];
 
     return (
         <div className="profile-page">
             <div className="profile-layout">
                 <aside className="profile-sidebar">
-                    <Avatar user={displayUser} size={64} editable={isSelf} onUpload={handleSaveAvatar} />
+                    <Avatar user={displayUser} size={64} />
                     <p className="profile-username">{displayUser?.username}</p>
                     <LevelBar xp={xp} level={level} xpForNextLevel={xpForNextLevel} />
                     {joined && <p className="profile-joined">joined {joined}</p>}
                     <FollowButton token={token} username={displayUser?.username} isSelf={isSelf} />
+                    <FollowerAvatars token={token} username={displayUser?.username} />
                     <nav className="profile-nav">
                         {tabs.map(t => (
                             <button key={t.id} className={`profile-nav-item${tab === t.id ? ' active' : ''}`} onClick={() => setTab(t.id)}>
@@ -650,9 +644,6 @@ const ProfilePage = () => {
                             displayUser={displayUser}
                             isSelf={isSelf}
                         />
-                    )}
-                    {tab === 'achievements' && (
-                        <AchievementsPanel submissions={displaySubmissions} games={displayGames} />
                     )}
                     {tab === 'settings' && isSelf && <SettingsPanel />}
                 </main>

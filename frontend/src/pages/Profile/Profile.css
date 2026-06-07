@@ -167,55 +167,97 @@
     font-size: 0.65rem;
     color: var(--text-muted);
     letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* ---------- Submission dots ---------- */
+
+.prof-follower-avatars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.prof-follower-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    overflow: hidden;
+    flex-shrink: 0;
+    opacity: 0.85;
+    transition: opacity 0.15s;
+}
+
+.prof-follower-avatar:hover {
+    opacity: 1;
+}
+
+.prof-follower-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 /* ---------- Sidebar text ---------- */
 
 .profile-username {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 500;
     color: var(--text);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.02em;
 }
 
 .profile-joined {
     margin: 0;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: var(--text-muted);
-    letter-spacing: 0.08em;
-    opacity: 0.7;
+    letter-spacing: 0.06em;
+    opacity: 0.65;
 }
 
 .profile-nav {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    margin-top: 28px;
+    gap: 1px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
 }
 
 .profile-nav-item {
     background: none;
     border: none;
     font-family: var(--font);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     letter-spacing: 0.1em;
     color: var(--text-muted);
     cursor: pointer;
-    padding: 7px 10px;
-    border-radius: 6px;
+    padding: 8px 10px;
+    border-radius: 5px;
     text-align: left;
     transition: background 0.12s, color 0.12s;
 }
 
 .profile-nav-item:hover {
     color: var(--text);
-    background: color-mix(in srgb, var(--text) 5%, transparent);
+    background: color-mix(in srgb, var(--text) 4%, transparent);
 }
 
 .profile-nav-item.active {
-    color: var(--text);
-    background: color-mix(in srgb, var(--text) 8%, transparent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 /* ---------- Content ---------- */
@@ -230,7 +272,7 @@
 .prof-overview {
     display: flex;
     flex-direction: column;
-    gap: 40px;
+    gap: 20px;
 }
 
 .prof-stats-row {
@@ -245,43 +287,46 @@
 
 .prof-stat {
     background: var(--bg);
-    padding: 18px 20px;
+    padding: 16px 18px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .prof-stat-value {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 500;
     color: var(--text);
     line-height: 1;
+    font-variant-numeric: tabular-nums;
 }
 
 .prof-stat-suffix {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
 }
 
 .prof-stat-label {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     color: var(--text-muted);
-    letter-spacing: 0.15em;
+    letter-spacing: 0.14em;
     text-transform: lowercase;
 }
 
 .prof-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
 }
 
 .prof-section-title {
     margin: 0;
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     color: var(--text-muted);
-    letter-spacing: 0.2em;
+    letter-spacing: 0.18em;
     text-transform: lowercase;
+    padding-bottom: 2px;
+    border-bottom: 1px solid var(--border);
 }
 
 /* Activity strip */
@@ -349,13 +394,11 @@
 }
 
 .badge-solved {
-    background: color-mix(in srgb, var(--success) 15%, transparent);
     color: var(--success);
 }
 
 .badge-attempted {
-    background: color-mix(in srgb, var(--text-muted) 15%, transparent);
-    color: var(--text-muted);
+    color: var(--error);
 }
 
 .prof-empty {
@@ -470,14 +513,13 @@
 
 .games-verdict {
     font-size: 0.65rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    font-weight: 600;
+    letter-spacing: 0.08em;
+    font-weight: 500;
     flex-shrink: 0;
 }
 
 .games-verdict.won  { color: var(--diff-easy); }
-.games-verdict.lost { color: var(--error); }
+.games-verdict.lost { color: var(--text-muted); }
 .games-verdict.draw { color: var(--text-muted); }
 
 /* ---------- Achievements ---------- */
@@ -527,8 +569,16 @@
 }
 
 .prof-achievement-icon {
-    font-size: 1.75rem;
+    font-size: 0.7rem;
     line-height: 1;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    opacity: 0.7;
+}
+
+.prof-achievement.unlocked .prof-achievement-icon {
+    opacity: 1;
 }
 
 .prof-achievement-title {
@@ -548,7 +598,7 @@
 /* ---------- Settings ---------- */
 
 .prof-settings {
-    max-width: 420px;
+    max-width: 280px;
     display: flex;
     flex-direction: column;
     gap: 40px;
@@ -687,4 +737,46 @@
 .prof-settings-toggle:hover {
     color: var(--text);
     border-color: var(--text);
+}
+
+.prof-settings-pw-wrap {
+    position: relative;
+}
+
+.prof-settings-pw-wrap .prof-settings-input {
+    padding-right: 40px;
+    width: 100%;
+}
+
+.prof-settings-pw-wrap .password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+}
+
+.prof-settings-danger {
+    border-top: 1px solid color-mix(in srgb, var(--error) 25%, var(--border));
+    margin-top: 8px;
+    padding-top: 16px;
+}
+
+.prof-settings-delete {
+    background: none;
+    border: 1px solid color-mix(in srgb, var(--error) 40%, var(--border));
+    color: var(--error);
+    font-family: var(--font);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    padding: 7px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.15s, border-color 0.15s;
+    text-transform: lowercase;
+    align-self: flex-start;
+}
+
+.prof-settings-delete:hover {
+    background: color-mix(in srgb, var(--error) 10%, transparent);
+    border-color: var(--error);
 }
