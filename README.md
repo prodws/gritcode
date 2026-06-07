@@ -1,5 +1,3 @@
-# gritcode
-
 A real-time competitive coding platform. Solve Java problems solo or compete against others in timed team battles.
 
 ![forge](docs/img_2.png)
