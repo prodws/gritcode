@@ -2,8 +2,10 @@
     min-height: 100vh;
     padding: 80px 60px 40px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 32px;
 }
 
 .settings-box {
@@ -37,6 +39,39 @@
 
 .settings-box .auth-submit {
     margin-top: 0;
+}
+
+.settings-danger {
+    border-top: 1px solid color-mix(in srgb, var(--error) 30%, var(--border));
+    padding-top: 12px;
+    gap: 10px;
+}
+
+.settings-danger-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--error);
+    opacity: 0.6;
+    text-transform: lowercase;
+}
+
+.settings-delete-btn {
+    background: none;
+    border: 1px solid color-mix(in srgb, var(--error) 40%, var(--border));
+    color: var(--error);
+    font-family: var(--font);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.15s, border-color 0.15s;
+    text-transform: lowercase;
+}
+
+.settings-delete-btn:hover {
+    background: color-mix(in srgb, var(--error) 10%, transparent);
+    border-color: var(--error);
 }
 
 .field-success {

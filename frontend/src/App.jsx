@@ -35,9 +35,10 @@ function App() {
             <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/auth" element={<AuthPage />} />
-                <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="/users" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="/users/:username" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-                <Route path="/solve" element={<ProtectedRoute><PracticePage /></ProtectedRoute>} />
+                <Route path="/forge/:problemId" element={<ProtectedRoute><PracticePage /></ProtectedRoute>} />
                 <Route path="/forge" element={<ProtectedRoute><ProblemsPage /></ProtectedRoute>} />
                 <Route path="/host" element={<ProtectedRoute><ProblemsPage /></ProtectedRoute>} />
                 <Route path="/join" element={<ProtectedRoute><ProblemsPage /></ProtectedRoute>} />

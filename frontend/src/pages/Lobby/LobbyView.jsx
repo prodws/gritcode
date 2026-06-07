@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Copy, Plus, Crown, Users, User, ListChecks, Timer, Tag, LogOut, ChevronRight, Info } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
 import { fetchGame, switchTeam, leaveGame, startGame, updateGameSettings, sendChatMessage } from '../../game/api';
@@ -179,10 +179,13 @@ const TeamList = ({ teams, maxPlayers, currentUserId, hostId, onJoin }) => {
                                         className={`lobby-slot lobby-slot-filled${p.player.id === currentUserId ? ' me' : ''}`}
                                         title={p.player.username}
                                     >
-                                        <span className="lobby-slot-initial">{p.player.username[0].toUpperCase()}</span>
+                                        {p.player.avatarBase64
+                                            ? <img src={p.player.avatarBase64} alt={p.player.username} className="lobby-slot-avatar-img" />
+                                            : <span className="lobby-slot-initial">{p.player.username[0].toUpperCase()}</span>
+                                        }
                                         {p.player.id === hostId && <Crown size={10} className="lobby-host-crown" />}
                                     </div>
-                                    <span className="lobby-slot-name">{p.player.username}</span>
+                                    <Link to={`/users/${p.player.username}`} className="lobby-slot-name lobby-slot-name-link">{p.player.username}</Link>
                                 </div>
                             ))}
                             <RenderEmptySlots

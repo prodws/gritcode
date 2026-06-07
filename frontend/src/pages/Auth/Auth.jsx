@@ -2,6 +2,7 @@ import React, { useState, useRef, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
 import { validateUsername, validateEmail, validatePassword } from '../../utils/validation';
+import PasswordRules from '../../components/PasswordRules/PasswordRules';
 import './Auth.css';
 
 const useDebounce = (value, delay) => {
@@ -169,8 +170,8 @@ const AuthPage = () => {
                             <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
                                 {showPassword ? '✶' : '✧'}
                             </button>
-                            {isRegister && getErrMsg('password', password) && <p className="field-error">{getErrMsg('password', password)}</p>}
                         </div>
+                        {isRegister && <PasswordRules password={password} />}
                     </div>
 
                     <button type="submit" className="auth-submit">

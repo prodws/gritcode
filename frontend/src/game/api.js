@@ -22,7 +22,7 @@ const GAME_FRAGMENT = `
             id
             joinedAt
             status
-            player { id username }
+            player { id username avatarBase64 }
         }
     }
     problems {

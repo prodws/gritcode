@@ -203,7 +203,9 @@ export const AppProvider = ({ children }) => {
             body: JSON.stringify({ query: `mutation { updatePassword(currentPassword: ${JSON.stringify(currentPassword)}, newPassword: ${JSON.stringify(newPassword)}) { id } }` }),
         }).then(r => r.json());
         if (res.errors) {
-            setError({ field: 'password', message: res.errors[0].message });
+            const msg = res.errors[0].message;
+            setError({ field: 'password', message: msg });
+            throw new Error(msg);
         } else {
             setSuccess({ field: 'password', message: 'Password updated' });
         }
@@ -232,6 +234,18 @@ export const AppProvider = ({ children }) => {
         goHome();
     }, [goHome]);
 
+    const deleteAccount = useCallback(async () => {
+        await fetch('http://localhost:8080/graphql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ query: `mutation { deleteAccount }` }),
+        });
+        setToken(null);
+        setCurrentUser(null);
+        localStorage.removeItem('token');
+        goHome();
+    }, [token, goHome]);
+
     const loadProblem = useCallback(async (problem) => {
         const fetchFile = async (path) => {
             const r = await fetch('http://localhost:8080/graphql', {
@@ -248,7 +262,7 @@ export const AppProvider = ({ children }) => {
         setCurrentProblem({ ...problem, description });
         setEditorContent(template);
         setSubmissionResult(null);
-        navigate('/solve');
+        navigate(`/forge/${problem.id}`);
     }, [navigate, token]);
 
     const goPractice = useCallback(() => {
@@ -382,6 +396,7 @@ export const AppProvider = ({ children }) => {
         handleSaveUsername,
         handleSavePassword,
         handleSaveAvatar,
+        deleteAccount,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

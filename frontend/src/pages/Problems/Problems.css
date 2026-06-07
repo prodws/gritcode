@@ -198,6 +198,7 @@ body:not([data-theme='light']) .room-field input {
     overflow: hidden;
 }
 
+
 .problems-section-label {
     font-size: 0.6875rem;
     color: var(--text-muted);

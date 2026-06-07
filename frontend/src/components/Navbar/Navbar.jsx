@@ -60,7 +60,7 @@ const Navbar = () => {
                 </button>
                 {currentUser ? (
                     <div style={{ position: 'relative' }}>
-                        <button className="navbar-avatar" onClick={() => handleNavigation('/profile')} onContextMenu={handleContextMenu}>
+                        <button className="navbar-avatar" onClick={() => handleNavigation('/users')} onContextMenu={handleContextMenu}>
                             {currentUser.avatarBase64
                                 ? <img src={currentUser.avatarBase64} alt={currentUser.username} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                                 : currentUser.username[0].toUpperCase()
@@ -68,7 +68,7 @@ const Navbar = () => {
                         </button>
                         {showMenu && (
                             <div className="user-menu">
-                                <button onClick={() => handleNavigation('/profile?tab=settings')}>settings</button>
+                                <button onClick={() => handleNavigation('/users?tab=settings')}>settings</button>
                                 <button onClick={handleLogout}>log out</button>
                             </div>
                         )}

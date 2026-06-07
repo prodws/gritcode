@@ -40,6 +40,8 @@ body[data-theme='light'] {
   --accent: #1e66f5;
   --accent-text: #ffffff;
   --surface: #f5f7fc;
+  --error: #c0324e;
+  --success: #2a8a3e;
   --diff-easy: #40a02b;
   --diff-medium: #df8e1d;
   --diff-hard: #d20f39;
@@ -195,8 +197,7 @@ body:not([data-theme='light']) .quest-attempt-btn {
 }
 
 body:not([data-theme='light']) .navbar {
-  background: rgba(10,12,16,0.8);
-  backdrop-filter: blur(12px);
+  background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
 
@@ -997,4 +998,29 @@ body[data-theme='dark'] .dashboard-command:hover {
 
 .terminal-empty {
     color: var(--text-muted);
+}
+
+/* ---------- Shared PasswordRules ---------- */
+
+.pw-rules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.pw-rule {
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 3px;
+}
+
+.pw-rule.ok {
+    color: var(--success);
+    background: color-mix(in srgb, var(--success) 12%, transparent);
+}
+
+.pw-rule.fail {
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--text-muted) 8%, transparent);
 }
