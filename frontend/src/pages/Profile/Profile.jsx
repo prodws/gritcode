@@ -48,21 +48,25 @@ const fmtDate = (iso) => {
 
 
 /* ---------- Level progress bar ---------- */
+const LEVEL_COLORS = ['#a78bfa', '#60a5fa', '#f97316', '#fbbf24', '#f87171', '#e879f9', '#38bdf8'];
+const levelColor = (level) => LEVEL_COLORS[level % LEVEL_COLORS.length];
+
 const LevelBar = ({ xp, level, xpForNextLevel }) => {
-    // xp for current level start
+    // xpForCurrent = total XP needed to reach current level
     let xpForCurrent = 0;
     for (let i = 1; i <= level; i++) xpForCurrent += 100 * i;
-    const segmentXp = xpForNextLevel - xpForCurrent;
-    const progressXp = xp - xpForCurrent;
-    const pct = Math.min(100, segmentXp > 0 ? (progressXp / segmentXp) * 100 : 0);
+    const xpAtLevelStart = xpForCurrent;
+    const segmentXp = xpForNextLevel - xpAtLevelStart;
+    const progressXp = xp - xpAtLevelStart;
+    const pct = Math.max(2, Math.min(100, segmentXp > 0 ? (progressXp / segmentXp) * 100 : 0));
+    const color = levelColor(level);
     return (
         <div className="prof-level-wrap">
             <div className="prof-level-row">
-                <span className="prof-level-label">level {level}</span>
-                <span className="prof-level-xp">{xp} / {xpForNextLevel} xp</span>
+                <span className="prof-level-xp">{progressXp} / {segmentXp} xp</span>
             </div>
             <div className="prof-level-bar">
-                <div className="prof-level-fill" style={{ width: `${pct}%` }} />
+                <div className="prof-level-fill" style={{ width: `${pct}%`, background: color }} />
             </div>
         </div>
     );
@@ -317,7 +321,7 @@ const FeedItem = ({ item }) => {
     return null;
 };
 
-const PRACTICE_XP = { EASY: 20, MEDIUM: 50, HARD: 100 };
+const PRACTICE_XP = { EASY: 50, MEDIUM: 100, HARD: 200 };
 
 const buildFeed = (submissions, games, currentUserId) => {
     const items = [];
@@ -345,11 +349,13 @@ const buildFeed = (submissions, games, currentUserId) => {
             color: 'var(--accent)',
             players: t.players.map(p => ({ initial: p.player.username[0].toUpperCase(), username: p.player.username, avatarBase64: p.player.avatarBase64 })),
         }));
+        const gameScore = myTeam?.score ?? 0;
+        const xpEarned = won ? gameScore + 50 : Math.floor(gameScore / 2);
         items.push({
             kind: 'game', id: g.id,
             layout: `${myTeam?.players.length ?? 0}v${opponents.map(t => t.players.length).join('v')}`,
             teamGroups, won, noWinner,
-            score: myTeam?.score ?? 0,
+            score: xpEarned,
             ts: g.endedAt ?? g.createdAt,
         });
     }
@@ -532,7 +538,7 @@ const FollowerAvatars = ({ token, username, currentUser, optimisticUser }) => {
 
 /* ---------- Main ---------- */
 const ProfilePage = () => {
-    const { token, currentUser, submissions, fetchSubmissions, handleSaveAvatar } = useContext(AppContext);
+    const { token, currentUser, refreshCurrentUser, submissions, fetchSubmissions, handleSaveAvatar } = useContext(AppContext);
     const navigate = useNavigate();
     const location = useLocation();
     const { username } = useParams();
@@ -560,7 +566,7 @@ const ProfilePage = () => {
         if (t && isSelf) setTab(t);
     }, [location.search, isSelf]);
 
-    useEffect(() => { if (isSelf) fetchSubmissions(); }, [fetchSubmissions, isSelf]);
+    useEffect(() => { if (isSelf) { fetchSubmissions(); refreshCurrentUser(); } }, [fetchSubmissions, refreshCurrentUser, isSelf]);
     useEffect(() => {
         if (!token || !isSelf) return;
         myFinishedGames(token).then(setGames).catch(() => setGames([]));
@@ -617,7 +623,10 @@ const ProfilePage = () => {
             <div className="profile-layout">
                 <aside className="profile-sidebar">
                     <Avatar user={displayUser} size={64} />
-                    <p className="profile-username">{displayUser?.username}</p>
+                    <p className="profile-username">
+                        <span className="prof-level-badge" style={{ borderColor: levelColor(level), color: levelColor(level) }}><span>{level}</span></span>
+                        {displayUser?.username}
+                    </p>
                     <LevelBar xp={xp} level={level} xpForNextLevel={xpForNextLevel} />
                     {joined && <p className="profile-joined">joined {joined}</p>}
                     <FollowButton token={token} username={displayUser?.username} isSelf={isSelf} onToggle={(nowFollowing) => setOptimisticFollow({ following: nowFollowing })} />

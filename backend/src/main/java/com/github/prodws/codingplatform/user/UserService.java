@@ -94,6 +94,7 @@ public class UserService {
         if (newUsername.length() > 20) throw new IllegalArgumentException("Username cannot exceed 20 characters");
         if (!newUsername.matches("^[a-zA-Z0-9_]+$")) throw new IllegalArgumentException("Username can only contain letters, numbers, and underscores");
         User user = getUserById(id);
+        if (user.getUsername().equals(newUsername)) throw new IllegalStateException("That's already your username");
         checkIfUsernameExists(newUsername);
         user.setUsername(newUsername);
         return userRepository.save(user);
@@ -133,9 +134,9 @@ public class UserService {
         var problem = problemRepository.findById(problemId).orElse(null);
         if (problem == null) return;
         long xp = switch (problem.getDifficulty()) {
-            case EASY   -> 20L;
-            case MEDIUM -> 50L;
-            case HARD   -> 100L;
+            case EASY   -> 50L;
+            case MEDIUM -> 100L;
+            case HARD   -> 200L;
         };
         addPoints(userId, xp);
     }

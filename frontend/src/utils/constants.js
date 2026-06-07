@@ -1,3 +1,5 @@
+export const APP_NAME = 'gritcode';
+
 export const TEAM_COLORS = ['var(--accent)', '#e05c5c', '#5cb85c', '#e0a85c', '#a78bfa'];
 export const teamColor = (idx) => TEAM_COLORS[idx % TEAM_COLORS.length];
 

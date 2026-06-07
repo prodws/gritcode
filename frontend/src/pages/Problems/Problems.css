@@ -115,7 +115,7 @@ body:not([data-theme='light']) .room-field input {
 }
 
 .room-submit {
-    margin-top: 14px;
+    margin-top: 0;
     background: var(--accent);
     border: none;
     color: var(--accent-text);
@@ -141,8 +141,12 @@ body:not([data-theme='light']) .room-field input {
 
 .room-join-card {
     padding: 48px 56px;
-    max-width: 520px;
+    max-width: 420px;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
 }
 
 .room-join-label {
@@ -150,7 +154,6 @@ body:not([data-theme='light']) .room-field input {
     font-size: 0.8125rem;
     letter-spacing: 0.08em;
     text-transform: lowercase;
-    margin-bottom: 16px;
     text-align: center;
 }
 
@@ -158,6 +161,7 @@ body:not([data-theme='light']) .room-field input {
     display: flex;
     align-items: center;
     gap: 12px;
+    width: 100%;
 }
 
 .room-join-input {

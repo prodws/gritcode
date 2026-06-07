@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
+import { APP_NAME } from '../../utils/constants';
 
 const HomePage = () => {
     const { currentUser } = useContext(AppContext);
@@ -13,7 +14,7 @@ const HomePage = () => {
     return (
         <div className="home-container">
             <h1 className="landing-title">
-                appname
+                {APP_NAME}
             </h1>
             <button
                 className="compete-btn"

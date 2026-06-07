@@ -291,6 +291,13 @@ export const AppProvider = ({ children }) => {
         }
     }, [success, clearSuccess]);
 
+    const refreshCurrentUser = useCallback(() => {
+        if (!token) return;
+        gql(token, `{ me { id username totalPoints createdAt avatarBase64 level xpForNextLevel } }`)
+            .then(d => { if (d.me) setCurrentUser(d.me); })
+            .catch(() => {});
+    }, [token]);
+
     useEffect(() => {
         const savedToken = localStorage.getItem('token');
         if (savedToken) {
@@ -343,6 +350,7 @@ export const AppProvider = ({ children }) => {
         handleSavePassword,
         handleSaveAvatar,
         deleteAccount,
+        refreshCurrentUser,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -1,6 +1,7 @@
 import { useContext, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BookOpen, PlusCircle, LogIn } from 'lucide-react';
+import { APP_NAME } from '../../utils/constants';
 import { AppContext } from '../../context/AppContext';
 import './Navbar.css';
 
@@ -33,7 +34,7 @@ const Navbar = () => {
     return (
         <nav className="navbar">
             <button className="navbar-logo" onClick={() => handleNavigation('/')}>
-                gritcode
+                {APP_NAME}
             </button>
 
             {currentUser && (
