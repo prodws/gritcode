@@ -1,16 +1,16 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
 import { fetchGame, fetchGameSubmissions } from '../../game/api';
 import Spinner from '../../components/Spinner/Spinner';
+import CodeBlock from '../../components/CodeBlock/CodeBlock';
 import './Results.css';
 
 const TEAM_COLORS = ['var(--accent)', '#e05c5c', '#5cb85c', '#e0a85c', '#a78bfa'];
 
 const Results = () => {
     const { gameId } = useParams();
-    const navigate = useNavigate();
-    const { token, currentUser } = useContext(AppContext);
+    const { token, currentUser, goPracticeById, theme } = useContext(AppContext);
     const [game, setGame] = useState(null);
     const [submissions, setSubmissions] = useState([]);
     const [activeProblemIdx, setActiveProblemIdx] = useState(0);
@@ -71,12 +71,15 @@ const Results = () => {
                                     <div className="results-team-name">{team.teamName}</div>
                                     <div className="results-team-avatars">
                                         {team.players.map(p => (
-                                            <Link key={p.id} to={`/profile/${p.player.username}`}
+                                            <Link key={p.id} to={`/users/${p.player.username}`}
                                                 className="results-avatar"
                                                 title={p.player.username}
-                                                style={{ background: teamColorMap[team.id] }}
+                                                style={p.player.avatarBase64 ? {} : { background: teamColorMap[team.id] }}
                                                 onClick={e => e.stopPropagation()}>
-                                                {p.player.username[0].toUpperCase()}
+                                                {p.player.avatarBase64
+                                                    ? <img src={p.player.avatarBase64} alt={p.player.username} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                                                    : p.player.username[0].toUpperCase()
+                                                }
                                             </Link>
                                         ))}
                                     </div>
@@ -107,13 +110,15 @@ const Results = () => {
                                         <span className="results-prob-pill-status">
                                             {solved ? '✓' : attempted ? '✗' : '—'}
                                         </span>
+                                        <button className="results-prob-pill-solve" onClick={() => goPracticeById(gp.problem.id)}>
+                                            practice
+                                        </button>
                                     </div>
                                 );
                             })}
                         </div>
                     )}
 
-                    <button className="results-back" onClick={() => navigate('/forge')}>back to practice</button>
                 </div>
 
                 {/* Code section */}
@@ -144,6 +149,9 @@ const Results = () => {
                                             <span className="results-code-panel-dot"
                                                 style={{ background: teamColorMap[team.id] }} />
                                             {team.teamName}
+                                            {submission?.user?.username && (
+                                                <span className="results-code-panel-author">— {submission.user.username}</span>
+                                            )}
                                         </div>
                                         {submission && (
                                             <span className={`results-code-status ${submission.passed ? 'passed' : 'failed'}`}>
@@ -151,12 +159,10 @@ const Results = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <pre className="results-code-body">
-                                        {submission
-                                            ? submission.code
-                                            : <span className="results-code-none">no submission</span>
-                                        }
-                                    </pre>
+                                    {submission
+                                        ? <CodeBlock code={submission.code} theme={theme} />
+                                        : <pre className="results-code-body"><span className="results-code-none">no submission</span></pre>
+                                    }
                                 </div>
                             ))}
                         </div>

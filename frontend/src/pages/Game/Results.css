@@ -37,14 +37,14 @@
 }
 
 .results-verdict-banner.lost {
-    background: color-mix(in srgb, var(--error) 6%, var(--surface));
-    border-color: color-mix(in srgb, var(--error) 30%, var(--border));
+    background: var(--surface);
+    border-color: var(--border);
 }
 
 .results-verdict {
-    font-size: 3.5rem;
-    font-weight: 700;
-    letter-spacing: 0.22em;
+    font-size: 2.5rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
     line-height: 1;
     margin: 0;
 }
@@ -55,8 +55,7 @@
 }
 
 .results-verdict.lost {
-    color: var(--error);
-    text-shadow: 0 0 32px color-mix(in srgb, var(--error) 25%, transparent);
+    color: var(--text-muted);
 }
 
 .results-verdict.draw {
@@ -65,7 +64,7 @@
 
 .results-xp-earned {
     font-size: 0.85rem;
-    color: var(--success);
+    color: var(--text-muted);
     letter-spacing: 0.12em;
     opacity: 0.85;
 }
@@ -229,6 +228,25 @@
     font-weight: 600;
 }
 
+.results-prob-pill-solve {
+    background: none;
+    border: none;
+    font-family: var(--font);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 3px;
+    transition: color 0.12s, background 0.12s;
+    flex-shrink: 0;
+}
+
+.results-prob-pill-solve:hover {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
 .results-prob-pill.solved .results-prob-pill-status { color: var(--success); }
 .results-prob-pill.attempted .results-prob-pill-status { color: var(--error); }
 .results-prob-pill.unsolved .results-prob-pill-status { color: var(--text-muted); opacity: 0.5; }
@@ -355,6 +373,12 @@
     height: 7px;
     border-radius: 50%;
     flex-shrink: 0;
+}
+
+.results-code-panel-author {
+    color: var(--text-muted);
+    opacity: 0.65;
+    font-size: 0.65rem;
 }
 
 .results-code-status {

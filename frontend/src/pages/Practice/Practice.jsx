@@ -1,10 +1,11 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useParams, Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import ReactMarkdown from 'react-markdown';
 import { JavaOriginal } from 'devicons-react';
 import { AppContext } from '../../context/AppContext';
 import Spinner from '../../components/Spinner/Spinner';
+import CodeBlock from '../../components/CodeBlock/CodeBlock';
 import './Practice.css';
 
 const STATUS_COLOR = {
@@ -66,9 +67,12 @@ const SubmissionResult = ({ result }) => {
 };
 
 const PracticePage = () => {
+    const { problemId } = useParams();
     const {
+        token,
         theme,
         currentProblem,
+        goPracticeById,
         editorContent,
         setEditorContent,
         submissionResult,
@@ -79,10 +83,42 @@ const PracticePage = () => {
         fetchSubmissions,
     } = useContext(AppContext);
 
+    // If we land directly on /solve/:problemId without state (e.g. refresh), load the problem
+    useEffect(() => {
+        if (problemId && (!currentProblem || String(currentProblem.id) !== String(problemId))) {
+            goPracticeById(problemId);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [problemId]);
+
     const [activeTab, setActiveTab] = useState('description');
-    const [expandedSub, setExpandedSub] = useState(null);
+    const [commSolutions, setCommSolutions] = useState(null); // null = not loaded
+    const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem('editor-font-size') ?? '13', 10));
+
+    const changeFontSize = (delta) => {
+        setFontSize(prev => {
+            const next = Math.max(10, Math.min(22, prev + delta));
+            localStorage.setItem('editor-font-size', String(next));
+            return next;
+        });
+    };
 
     useEffect(() => { fetchSubmissions(); }, [fetchSubmissions, submissionResult]);
+
+    const isSolved = submissions.some(s => s.problem?.id === currentProblem?.id && s.passed);
+
+    useEffect(() => {
+        if (activeTab !== 'solutions' || !isSolved || !currentProblem?.id || !token) return;
+        if (commSolutions !== null) return; // already loaded for this problem
+        fetch('http://localhost:8080/graphql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ query: `query($id:ID!){passedSubmissionsByProblem(problemId:$id){id code createdAt user{id username avatarBase64}}}`, variables: { id: currentProblem.id } }),
+        }).then(r => r.json()).then(d => setCommSolutions(d.data?.passedSubmissionsByProblem ?? []));
+    }, [activeTab, isSolved, currentProblem?.id, token, commSolutions]);
+
+    // Reset community solutions when problem changes
+    useEffect(() => { setCommSolutions(null); setActiveTab('description'); }, [currentProblem?.id]);
 
     const monacoTheme = theme === 'dark' ? 'dark-surface' : 'light-surface';
 
@@ -113,7 +149,7 @@ const PracticePage = () => {
         };
     }, [isDragging]);
 
-    if (!currentProblem) return <Navigate to="/" replace />;
+    if (!currentProblem) return problemId ? <Spinner /> : <Navigate to="/forge" replace />;
 
     const description = currentProblem?.description ?? '';
     const diff = currentProblem?.difficulty?.toLowerCase();
@@ -130,6 +166,12 @@ const PracticePage = () => {
                         className={`practice-tab ${activeTab === 'submissions' ? 'active' : ''}`}
                         onClick={() => setActiveTab('submissions')}
                     >submissions</button>
+                    {isSolved && (
+                        <button
+                            className={`practice-tab ${activeTab === 'solutions' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('solutions')}
+                        >solutions</button>
+                    )}
                 </div>
             </div>
             <div className="practice-body">
@@ -146,39 +188,63 @@ const PracticePage = () => {
                             </div>
                         )}
                     </div>
-                    {activeTab === 'description' ? (
+                    {activeTab === 'description' && (
                         <div className="practice-desc"><ReactMarkdown>{description}</ReactMarkdown></div>
-                    ) : (
+                    )}
+                    {activeTab === 'submissions' && (
                         <div className="practice-subs">
                             {(() => {
                                 const mine = submissions.filter(s => s.problem?.id === currentProblem.id);
                                 if (mine.length === 0) {
                                     return <div className="practice-subs-empty">no submissions yet for this problem</div>;
                                 }
-                                return mine.map((s, i) => {
-                                    const isOpen = expandedSub === s.id;
-                                    return (
-                                        <div key={s.id} className="practice-sub-row">
-                                            <div className="practice-sub-head" onClick={() => setExpandedSub(isOpen ? null : s.id)}>
-                                                <span className="practice-sub-num">#{mine.length - i}</span>
-                                                <span
-                                                    className="practice-sub-status"
-                                                    style={{ color: s.passed ? 'var(--success)' : 'var(--error)' }}
-                                                >
-                                                    {s.status.replace(/_/g, ' ').toLowerCase()}
+                                return mine.map((s, i) => (
+                                    <div key={s.id} className="practice-sub-row">
+                                        <div className="practice-sub-head">
+                                            <span className="practice-sub-num">#{mine.length - i}</span>
+                                            <span className="practice-sub-status"
+                                                style={{ color: s.passed ? 'var(--success)' : 'var(--error)' }}>
+                                                {s.status.replace(/_/g, ' ').toLowerCase()}
+                                            </span>
+                                            {s.createdAt && (
+                                                <span className="practice-sub-date">
+                                                    {new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                                 </span>
-                                                {s.createdAt && (
-                                                    <span className="practice-sub-date">
-                                                        {new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                                    </span>
-                                                )}
-                                                <span className="practice-sub-chev">{isOpen ? '▲' : '▼'}</span>
-                                            </div>
-                                            {isOpen && <pre className="practice-sub-code">{s.code}</pre>}
+                                            )}
                                         </div>
-                                    );
-                                });
+                                        <CodeBlock code={s.code} theme={theme} />
+                                    </div>
+                                ));
                             })()}
+                        </div>
+                    )}
+                    {activeTab === 'solutions' && (
+                        <div className="practice-subs">
+                            {commSolutions === null ? (
+                                <div className="practice-subs-empty">loading...</div>
+                            ) : commSolutions.length === 0 ? (
+                                <div className="practice-subs-empty">no community solutions yet</div>
+                            ) : commSolutions.map((s) => (
+                                <div key={s.id} className="practice-sub-row">
+                                    <div className="practice-sub-head">
+                                        <Link to={`/users/${s.user?.username}`} className="practice-comm-author-link">
+                                            <span className="practice-comm-avatar"
+                                                style={s.user?.avatarBase64 ? {} : { background: 'var(--accent)' }}>
+                                                {s.user?.avatarBase64
+                                                    ? <img src={s.user.avatarBase64} alt={s.user.username} />
+                                                    : (s.user?.username?.[0] ?? '?').toUpperCase()}
+                                            </span>
+                                            <span className="practice-comm-author">{s.user?.username ?? 'unknown'}</span>
+                                        </Link>
+                                        {s.createdAt && (
+                                            <span className="practice-sub-date">
+                                                {new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <CodeBlock code={s.code} theme={theme} />
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
@@ -189,6 +255,11 @@ const PracticePage = () => {
                             <div className="practice-lang">
                                 <JavaOriginal size={18} />
                                 <span>java</span>
+                            </div>
+                            <div className="editor-font-controls">
+                                <button className="editor-font-btn" onClick={() => changeFontSize(-1)} title="decrease font size">−</button>
+                                <span className="editor-font-size">{fontSize}</span>
+                                <button className="editor-font-btn" onClick={() => changeFontSize(1)} title="increase font size">+</button>
                             </div>
                             <button className="practice-run" onClick={handleRun}>run</button>
                             <button className="practice-submit" onClick={handleSubmit}>submit</button>
@@ -207,7 +278,7 @@ const PracticePage = () => {
                                     value={editorContent}
                                     theme={monacoTheme}
                                     onChange={(v) => setEditorContent(v || '')}
-                                    options={{ renderLineHighlight: 'none' }}
+                                    options={{ renderLineHighlight: 'none', fontSize }}
                                 />
                             </div>
 

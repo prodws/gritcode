@@ -1,0 +1,36 @@
+.code-block {
+    position: relative;
+    max-height: 280px;
+    overflow: auto;
+}
+
+.code-block pre {
+    margin: 0 !important;
+}
+
+.code-block-copy {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    background: color-mix(in srgb, var(--text) 8%, var(--bg));
+    border: 0.5px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--font);
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+    z-index: 1;
+}
+
+.code-block:hover .code-block-copy {
+    opacity: 1;
+}
+
+.code-block-copy.copied {
+    color: var(--success);
+    opacity: 1;
+}
