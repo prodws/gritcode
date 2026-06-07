@@ -97,12 +97,8 @@ public class UserService {
         User user = getUserById(id);
         if (!verifyPassword(currentPassword, user.getPasswordHash()))
             throw new IllegalStateException("Current password is incorrect");
-        if (newPassword == null || newPassword.length() < 8)
-            throw new IllegalArgumentException("Password must be at least 8 characters");
-        if (!newPassword.matches(".*[a-zA-Z].*"))
-            throw new IllegalArgumentException("Password must contain at least one letter");
-        if (!newPassword.matches(".*[0-9].*"))
-            throw new IllegalArgumentException("Password must contain at least one number");
+        if (newPassword == null || newPassword.length() < 5)
+            throw new IllegalArgumentException("Password must be at least 5 characters");
         if (!newPassword.matches(".*[^a-zA-Z0-9].*"))
             throw new IllegalArgumentException("Password must contain at least one special character");
         user.setPasswordHash(passwordEncoder.encode(newPassword));
@@ -184,6 +180,10 @@ public class UserService {
 
     public long countFollowers(Long userId) {
         return userRepository.countFollowers(userId);
+    }
+
+    public java.util.List<User> getFollowers(Long userId) {
+        return new java.util.ArrayList<>(getUserById(userId).getFollowers());
     }
 
     public long countFollowing(Long userId) {

@@ -73,6 +73,12 @@ public class UserResolver {
     }
 
     @QueryMapping
+    public java.util.List<User> followers(@Argument String username) {
+        Long userId = userService.getUserByUsername(username).getId();
+        return userService.getFollowers(userId);
+    }
+
+    @QueryMapping
     public int followingCount(@Argument String username) {
         Long userId = userService.getUserByUsername(username).getId();
         return (int) userService.countFollowing(userId);
@@ -99,5 +105,12 @@ public class UserResolver {
     public int xpForNextLevel(User user) {
         int currentLevel = UserService.levelFromXp(user.getTotalPoints());
         return (int) UserService.xpForNextLevel(currentLevel);
+    }
+
+    @MutationMapping
+    public boolean deleteAccount(Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        userService.deleteUser(userId);
+        return true;
     }
 }

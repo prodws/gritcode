@@ -16,6 +16,8 @@ type Query {
     isFollowing(targetUsername: String!): Boolean!
     followerCount(username: String!): Int!
     followingCount(username: String!): Int!
+    followers(username: String!): [User!]!
+    passedSubmissionsByProblem(problemId: ID!): [Submission!]!
 }
 
 type Mutation {
@@ -47,6 +49,7 @@ type Mutation {
     submitGameSolution(gameId: ID!, problemId: ID!, code: String!): Submission!
     finishGame(gameId: ID!): Game!
     sendChatMessage(gameId: ID!, text: String!): Boolean!
+    deleteAccount: Boolean!
 }
 
 # Output types

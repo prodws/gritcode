@@ -33,21 +33,25 @@ public class SubmissionResolver {
         return submissionService.getSubmissionsByGame(gameId);
     }
 
+    @QueryMapping
+    public List<Submission> passedSubmissionsByProblem(@Argument Long problemId) {
+        return submissionService.getPassedSubmissionsByProblem(problemId);
+    }
+
     @MutationMapping
     public Submission submitSolution(@Argument("input") SubmitSolutionInput input) {
         ExecutionResult executionResult =
                 submissionService.submitSolution(input.problemId(), input.solutionCode());
-        Submission saved = submissionService.saveSubmission(
+        // Check before saving so the current submission isn't counted as a prior solve
+        if (executionResult.passed()) {
+            userService.addPracticeXpIfFirstSolve(input.userId(), input.problemId());
+        }
+        return submissionService.saveSubmission(
                 input.userId(),
                 input.problemId(),
                 input.solutionCode(),
                 executionResult
         );
-        // Award XP for first-time practice solve
-        if (executionResult.passed()) {
-            userService.addPracticeXpIfFirstSolve(input.userId(), input.problemId());
-        }
-        return saved;
     }
 
     @MutationMapping

@@ -14,4 +14,5 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     List<Submission> findAllByGameId(Long gameId);
     List<Submission> findAllByGameIdAndTeamId(Long gameId, Long teamId);
     List<Submission> findAllByGameIdAndProblemIdAndTeamId(Long gameId, Long problemId, Long teamId);
+    List<Submission> findByProblemIdAndPassedTrueOrderByCreatedAtDesc(Long problemId);
 }
