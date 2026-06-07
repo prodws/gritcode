@@ -19,8 +19,6 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    private static final int MAX_AVATAR_BYTES = 512 * 1024; // 512 KB
-
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
@@ -65,6 +63,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
+
     private void checkIfEmailExists(String email) {
         if (userRepository.existsByEmail(email)) throw new IllegalStateException("Email already taken");
     }
@@ -73,8 +72,15 @@ public class UserService {
         if (userRepository.existsByUsername(username)) throw new IllegalStateException("Username already taken");
     }
 
+    @Transactional
     public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) throw new IllegalStateException("User not found");
+        User user = userRepository.findById(id).orElseThrow(() -> new IllegalStateException("User not found"));
+        // clear join table rows on both sides before delete
+        for (User followed : user.getFollowing()) followed.getFollowers().remove(user);
+        user.getFollowing().clear();
+        for (User follower : user.getFollowers()) follower.getFollowing().remove(user);
+        user.getFollowers().clear();
+        userRepository.save(user);
         userRepository.deleteById(id);
     }
 
@@ -135,21 +141,15 @@ public class UserService {
     }
 
     public User updateAvatar(Long id, String base64Data) {
-        byte[] decoded;
+        String prefix = base64Data.contains(",") ? base64Data.split(",", 2)[0] + "," : "data:image/jpeg;base64,";
+        String rawBase64 = base64Data.contains(",") ? base64Data.split(",", 2)[1] : base64Data;
         try {
-            // strip data URI prefix if present
-            String raw = base64Data.contains(",") ? base64Data.split(",", 2)[1] : base64Data;
-            decoded = Base64.getDecoder().decode(raw);
+            Base64.getDecoder().decode(rawBase64);
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid base64 image data");
         }
-        if (decoded.length > MAX_AVATAR_BYTES) {
-            throw new IllegalArgumentException("Avatar image must be smaller than 512 KB");
-        }
         User user = getUserById(id);
-        // store as full data URI so the frontend can use it directly in <img src>
-        String raw = base64Data.contains(",") ? base64Data : "data:image/jpeg;base64," + base64Data;
-        user.setAvatarBase64(raw);
+        user.setAvatarBase64(prefix + rawBase64);
         return userRepository.save(user);
     }
 

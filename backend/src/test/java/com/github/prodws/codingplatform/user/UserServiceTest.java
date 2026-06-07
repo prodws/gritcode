@@ -225,10 +225,11 @@ class UserServiceTest {
     @Test
     void updatePassword_success() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(alice));
-        when(passwordEncoder.encode("newpassword")).thenReturn("newHashed");
+        when(passwordEncoder.matches(password, hashedPassword)).thenReturn(true);
+        when(passwordEncoder.encode("newpass!")).thenReturn("newHashed");
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
-        User result = userService.updatePassword(1L, "newpassword");
+        User result = userService.updatePassword(1L, password, "newpass!");
 
         assertThat(result.getPasswordHash()).isEqualTo("newHashed");
     }
@@ -245,7 +246,8 @@ class UserServiceTest {
 
     @Test
     void deleteUser_success() {
-        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(alice));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         userService.deleteUser(1L);
 
@@ -254,7 +256,7 @@ class UserServiceTest {
 
     @Test
     void deleteUser_notFound_throwsException() {
-        when(userRepository.existsById(1L)).thenReturn(false);
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.deleteUser(1L))
                 .isInstanceOf(IllegalStateException.class)
