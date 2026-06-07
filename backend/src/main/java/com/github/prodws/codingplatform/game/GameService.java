@@ -434,12 +434,13 @@ public class GameService {
             t.setWinner(isWinner);
             teamRepository.save(t);
 
-            // Award XP: winner gets full team score, others get partial based on rank
             long xpPerPlayer = isWinner
-                    ? (long) t.getScore() + 50L  // bonus for winning
-                    : Math.max(10L, (long) t.getScore() / 2);
-            for (GamePlayer gp : t.getPlayers()) {
-                userService.addPoints(gp.getPlayer().getId(), xpPerPlayer);
+                    ? (long) t.getScore() + 50L
+                    : (long) t.getScore() / 2;
+            if (xpPerPlayer > 0) {
+                for (GamePlayer gp : t.getPlayers()) {
+                    userService.addPoints(gp.getPlayer().getId(), xpPerPlayer);
+                }
             }
             rank++;
         }
