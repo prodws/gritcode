@@ -2,9 +2,11 @@
 
 A real-time competitive coding platform. Solve Java problems solo or compete against others in timed team battles.
 
-![forge](docs/screenshot-forge.png)
+![forge](docs/img_2.png)
 
-![lobby](docs/screenshot-lobby.png)
+![lobby](docs/img.png)
+
+![game](docs/img_1.png)
 
 ---
 
@@ -14,7 +16,6 @@ A real-time competitive coding platform. Solve Java problems solo or compete aga
 - **Practice** — solve problems individually, see pass/fail output, earn XP on first solve
 - **Multiplayer** — host or join a room with an invite code, compete in teams against a timer, real-time scoreboard via WebSocket
 - **Profiles** — XP, level badge, submission history, follow other users
-- **Dark / light theme**
 
 ---
 
@@ -103,12 +104,5 @@ Open [http://localhost:5173](http://localhost:5173).
 | `APP_ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated CORS origins |
 
 ---
-
-## Deployment
-
-The `deploy/` directory (gitignored) contains two scripts:
-
-- **`deploy/setup`** — provisions a new Azure VM, installs dependencies, builds and uploads the app, configures Nginx + Let's Encrypt HTTPS, creates a systemd service
-- **`deploy/deploy`** — rebuilds frontend + backend and redeploys to an existing VM
 
 Live instance: [https://gritcode.polandcentral.cloudapp.azure.com](https://gritcode.polandcentral.cloudapp.azure.com)
