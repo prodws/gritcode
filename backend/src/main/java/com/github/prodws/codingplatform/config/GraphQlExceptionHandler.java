@@ -23,7 +23,7 @@ public class GraphQlExceptionHandler extends DataFetcherExceptionResolverAdapter
                     .location(env.getField().getSourceLocation())
                     .build();
         }
-        if (ex instanceof IllegalStateException) {
+        if (ex instanceof IllegalStateException || ex instanceof IllegalArgumentException) {
             return GraphQLError.newError()
                     .errorType(ErrorType.BAD_REQUEST)
                     .message(ex.getMessage())

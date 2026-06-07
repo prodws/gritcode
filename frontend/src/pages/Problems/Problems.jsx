@@ -4,7 +4,7 @@ import { JavaOriginal } from 'devicons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeClosed, Shuffle } from 'lucide-react';
 import { AppContext } from '../../context/AppContext';
-import { createGame, joinGameByCode } from '../../game/api';
+import { createGame, joinGameByCode, gql, GRAPHQL_URL } from '../../game/api';
 import LobbyView from '../Lobby/LobbyView';
 import '../Lobby/Lobby.css';
 import './Problems.css';
@@ -136,7 +136,7 @@ const JoinRoomPanel = ({ token, onClose }) => {
     return (
         <div className="room-panel room-panel-center">
             <div className="room-join-card">
-                <p className="room-join-label">paste a link / code to the game</p>
+                <p className="room-join-label">paste a code to the game</p>
                 <form className="room-join-row" onSubmit={handleJoin}>
                     <input
                         className="room-join-input"
@@ -201,7 +201,7 @@ const ProblemsPage = () => {
     }, [selected]);
 
     useEffect(() => {
-        fetch('http://localhost:8080/graphql', {
+        fetch(GRAPHQL_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ query: `{ problems { id title difficulty type files { filePath fileRole } } }` }),
@@ -241,7 +241,7 @@ const ProblemsPage = () => {
         const entries = await Promise.all(list.map(async p => {
             const descFile = p.files.find(f => f.fileRole === 'DESCRIPTION');
             if (!descFile) return [p.id, ''];
-            const r = await fetch('http://localhost:8080/graphql', {
+            const r = await fetch(GRAPHQL_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ query: `{ fileContent(path: "${descFile.filePath}") }` }),
@@ -253,7 +253,7 @@ const ProblemsPage = () => {
     };
 
     const loadStatuses = async () => {
-        const r = await fetch('http://localhost:8080/graphql', {
+        const r = await fetch(GRAPHQL_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ query: `{ mySubmissions { status problem { id } } }` }),

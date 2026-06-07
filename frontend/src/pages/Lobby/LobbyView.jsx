@@ -502,8 +502,8 @@ const LobbyView = ({ gameId, onLeave }) => {
         try {
             const g = await fetchGame(token, gameId);
             setGame(g);
-            if (g.status === 'IN_PROGRESS') navigate(`/game/${gameId}`);
-            if (g.status === 'FINISHED') navigate(`/game/${gameId}/results`);
+            if (g.status === 'IN_PROGRESS') { leftRef.current = true; navigate(`/game/${gameId}`); }
+            if (g.status === 'FINISHED') { leftRef.current = true; navigate(`/game/${gameId}/results`); }
             if (g.status === 'CANCELLED') {
                 const isHost = g.host.id === currentUser?.id;
                 if (!isHost) showToast('the host left and the room was closed', 'warning');
@@ -535,11 +535,16 @@ const LobbyView = ({ gameId, onLeave }) => {
         refresh();
     }), [gameId, refresh]);
 
-    // Auto-leave on tab close / refresh / pagehide so the host's lobby updates.
+    // Keep a ref to the latest game status so the unload handler can read it synchronously.
+    const gameStatusRef = useRef(game?.status);
+    useEffect(() => { gameStatusRef.current = game?.status; }, [game?.status]);
+
+    // Auto-leave on tab close / refresh so the host's lobby updates.
+    // Skipped when game is already IN_PROGRESS (intentional navigation to game view).
     useEffect(() => {
         if (!token || !gameId) return;
         const sendLeave = () => {
-            if (leftRef.current) return;
+            if (leftRef.current || gameStatusRef.current !== 'WAITING') return;
             leftRef.current = true;
             const body = JSON.stringify({
                 query: `mutation($g: ID!) { leaveGame(gameId: $g) { id } }`,

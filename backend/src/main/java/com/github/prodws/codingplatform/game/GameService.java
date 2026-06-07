@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -271,7 +272,7 @@ public class GameService {
         if (isHost) {
             if (game.getStatus() == GameStatus.WAITING) {
                 game.setStatus(GameStatus.CANCELLED);
-                game.setEndedAt(LocalDateTime.now());
+                game.setEndedAt(Instant.now());
                 game = gameRepository.save(game);
             } else if (game.getStatus() == GameStatus.IN_PROGRESS) {
                 game = finalizeGame(game);
@@ -296,7 +297,7 @@ public class GameService {
             throw new IllegalStateException("Every team must have at least one player");
         }
         game.setStatus(GameStatus.IN_PROGRESS);
-        game.setStartedAt(LocalDateTime.now());
+        game.setStartedAt(Instant.now());
         Game saved = gameRepository.save(game);
         eventPublisher.publishStateChanged(gameId);
         return saved;
@@ -392,7 +393,7 @@ public class GameService {
         // Time bonus: up to 50% extra for solving quickly
         // Decay linearly over the time limit; minimum is the base score
         if (game.getStartedAt() != null) {
-            long elapsedSeconds = java.time.Duration.between(game.getStartedAt(), LocalDateTime.now()).toSeconds();
+            long elapsedSeconds = java.time.Duration.between(game.getStartedAt(), Instant.now()).toSeconds();
             long timeLimit = game.getTimeLimitSeconds();
             double fraction = Math.max(0.0, 1.0 - (double) elapsedSeconds / timeLimit);
             int bonus = (int) (base * 0.5 * fraction);
@@ -420,7 +421,7 @@ public class GameService {
     public Game finalizeGame(Game game) {
         if (game.getStatus() == GameStatus.FINISHED) return game;
         game.setStatus(GameStatus.FINISHED);
-        game.setEndedAt(LocalDateTime.now());
+        game.setEndedAt(Instant.now());
 
         List<GameTeam> teams = new ArrayList<>(game.getTeams());
         teams.sort(Comparator.comparingInt(GameTeam::getScore).reversed());
