@@ -1,0 +1,10 @@
+{
+  "type": "CODING",
+  "title": "Best Time to Buy and Sell Stock",
+  "difficulty": "EASY",
+  "files": [
+    { "path": "problems/best-time-to-buy-sell-stock/description.md", "name": "description.md", "role": "DESCRIPTION" },
+    { "path": "problems/best-time-to-buy-sell-stock/Solution.java", "name": "Solution.java", "role": "TEMPLATE" },
+    { "path": "problems/best-time-to-buy-sell-stock/MainTest.java", "name": "MainTest.java", "role": "TEST" }
+  ]
+}

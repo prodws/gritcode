@@ -1,0 +1,10 @@
+{
+  "type": "CODING",
+  "title": "Coin Change",
+  "difficulty": "HARD",
+  "files": [
+    { "path": "problems/coin-change/description.md", "name": "description.md", "role": "DESCRIPTION" },
+    { "path": "problems/coin-change/Solution.java", "name": "Solution.java", "role": "TEMPLATE" },
+    { "path": "problems/coin-change/MainTest.java", "name": "MainTest.java", "role": "TEST" }
+  ]
+}

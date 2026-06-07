@@ -1,0 +1,10 @@
+{
+  "type": "CODING",
+  "title": "Product of Array Except Self",
+  "difficulty": "MEDIUM",
+  "files": [
+    { "path": "problems/product-except-self/description.md", "name": "description.md", "role": "DESCRIPTION" },
+    { "path": "problems/product-except-self/Solution.java", "name": "Solution.java", "role": "TEMPLATE" },
+    { "path": "problems/product-except-self/MainTest.java", "name": "MainTest.java", "role": "TEST" }
+  ]
+}
