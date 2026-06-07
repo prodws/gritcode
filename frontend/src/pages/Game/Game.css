@@ -1,10 +1,11 @@
 .game-page {
-    height: 100vh;
-    padding-top: 42px;
+    height: calc(100vh - 42px);
+    margin-top: 42px;
     display: grid;
-    grid-template-columns: 100px 1fr 1.4fr;
-    gap: 12px;
-    padding: 50px 16px 16px;
+    grid-template-columns: 68px 1fr 1.4fr;
+    column-gap: 8px;
+    padding-left: 8px;
+    background: var(--bg);
     box-sizing: border-box;
     overflow: hidden;
     font-family: var(--font);
@@ -28,15 +29,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 16px 8px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    gap: 14px;
+    padding: 12px 4px;
+    background: var(--bg);
+    gap: 10px;
 }
 
 .game-timer {
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     font-variant-numeric: tabular-nums;
     color: var(--text);
     letter-spacing: 0.05em;
@@ -44,7 +43,7 @@
 
 .game-timer-total {
     color: var(--text-muted);
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     margin-left: 2px;
 }
 
@@ -57,8 +56,8 @@
 }
 
 .game-task-dot {
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: 1px solid var(--border);
     background: var(--bg);
@@ -109,8 +108,6 @@
 
 .game-desc {
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
     padding: 24px 28px;
     overflow-y: auto;
 }
@@ -161,8 +158,6 @@
 
 .game-right {
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -233,8 +228,6 @@
     min-height: 0;
     overflow: hidden;
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
 }
 
 .game-middle .game-desc {
@@ -279,7 +272,6 @@
 
 .game-chat-embed {
     background: var(--surface);
-    border-radius: 0 0 10px 10px;
     display: flex;
     flex-direction: column;
     overflow: hidden;

@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useRef, useState, useCallback } from 'rea
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import ReactMarkdown from 'react-markdown';
+import { JavaOriginal } from 'devicons-react';
 import { AppContext } from '../../context/AppContext';
 import { fetchGame, submitGameSolution, finishGame, sendChatMessage } from '../../game/api';
 import { subscribeGame } from '../../game/socket';
@@ -77,6 +78,14 @@ const Game = () => {
     const navigate = useNavigate();
     const { token, currentUser, theme, showToast } = useContext(AppContext);
     const [game, setGame] = useState(null);
+    const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem('editor-font-size') ?? '13', 10));
+    const changeFontSize = (delta) => {
+        setFontSize(prev => {
+            const next = Math.max(10, Math.min(22, prev + delta));
+            localStorage.setItem('editor-font-size', String(next));
+            return next;
+        });
+    };
     const [problemIndex, setProblemIndex] = useState(0);
     const [descs, setDescs] = useState({});
     const [templates, setTemplates] = useState({});
@@ -430,9 +439,20 @@ const Game = () => {
             <div className="game-right">
                 <div className="game-editor-bar">
                     <span className="game-editor-label">solution.java</span>
-                    <button className="game-run" onClick={runTests} disabled={running || !code.trim()}>
-                        {running ? 'running...' : 'run tests'}
-                    </button>
+                    <div className="practice-actions">
+                        <div className="practice-lang">
+                            <JavaOriginal size={18} />
+                            <span>java</span>
+                        </div>
+                        <div className="editor-font-controls">
+                            <button className="editor-font-btn" onClick={() => changeFontSize(-1)} title="decrease font size">−</button>
+                            <span className="editor-font-size">{fontSize}</span>
+                            <button className="editor-font-btn" onClick={() => changeFontSize(1)} title="increase font size">+</button>
+                        </div>
+                        <button className="game-run" onClick={runTests} disabled={running || !code.trim()}>
+                            {running ? 'running...' : 'run tests'}
+                        </button>
+                    </div>
                 </div>
                 <div className="practice-editor-wrap">
                     <div className="editor-terminal-container">
@@ -452,7 +472,7 @@ const Game = () => {
                                     value={code}
                                     theme={monacoTheme}
                                     onChange={(v) => setCodeByProblem(prev => ({ ...prev, [currentProblemId]: v || '' }))}
-                                    options={{ renderLineHighlight: 'none' }}
+                                    options={{ renderLineHighlight: 'none', fontSize }}
                                 />
                             )}
                         </div>
