@@ -94,7 +94,7 @@ export const AppProvider = ({ children }) => {
             fetch('http://localhost:8080/graphql', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ query: `{ me { id username totalPoints createdAt } }` }),
+                body: JSON.stringify({ query: `{ me { id username totalPoints createdAt avatarBase64 level xpForNextLevel } }` }),
             })
             .then(res => res.json())
             .then(userData => {
@@ -180,38 +180,50 @@ export const AppProvider = ({ children }) => {
         }
     }, []);
 
-    const handleSaveSettings = useCallback(async (newUsername, newPassword) => {
-        clearError();
-        clearSuccess();
-        const promises = [];
-        if (newUsername) promises.push(
-            fetch('http://localhost:8080/graphql', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ query: `mutation { updateUsername(newUsername: "${newUsername}") { username } }` }),
-            }).then(r => r.json())
-        );
-        if (newPassword) promises.push(
-            fetch('http://localhost:8080/graphql', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ query: `mutation { updatePassword(newPassword: "${newPassword}") { id } }` }),
-            }).then(r => r.json())
-        );
-        const results = await Promise.all(promises);
-        results.forEach(json => {
-            if (json.errors) {
-                const msg = json.errors[0].message;
-                const field = msg.toLowerCase().includes('username') ? 'username' : 'password';
-                setError({ field, message: msg });
-            } else if (json.data?.updateUsername) {
-                setCurrentUser(prev => ({ ...prev, username: json.data.updateUsername.username }));
-                setSuccess({ field: 'username', message: 'Username updated successfully' });
-            } else if (json.data?.updatePassword) {
-                setSuccess({ field: 'password', message: 'Password updated successfully' });
-            }
-        });
+    const handleSaveUsername = useCallback(async (newUsername) => {
+        clearError(); clearSuccess();
+        const res = await fetch('http://localhost:8080/graphql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ query: `mutation { updateUsername(newUsername: ${JSON.stringify(newUsername)}) { id username } }` }),
+        }).then(r => r.json());
+        if (res.errors) {
+            setError({ field: 'username', message: res.errors[0].message });
+        } else {
+            setCurrentUser(prev => ({ ...prev, username: res.data.updateUsername.username }));
+            setSuccess({ field: 'username', message: 'Username updated' });
+        }
     }, [token, clearError, clearSuccess]);
+
+    const handleSavePassword = useCallback(async (currentPassword, newPassword) => {
+        clearError(); clearSuccess();
+        const res = await fetch('http://localhost:8080/graphql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ query: `mutation { updatePassword(currentPassword: ${JSON.stringify(currentPassword)}, newPassword: ${JSON.stringify(newPassword)}) { id } }` }),
+        }).then(r => r.json());
+        if (res.errors) {
+            setError({ field: 'password', message: res.errors[0].message });
+        } else {
+            setSuccess({ field: 'password', message: 'Password updated' });
+        }
+    }, [token, clearError, clearSuccess]);
+
+    const handleSaveAvatar = useCallback(async (base64Data) => {
+        const res = await fetch('http://localhost:8080/graphql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ query: `mutation { updateAvatar(base64Data: ${JSON.stringify(base64Data)}) { id avatarBase64 } }` }),
+        }).then(r => r.json());
+        if (res.errors) throw new Error(res.errors[0].message);
+        setCurrentUser(prev => ({ ...prev, avatarBase64: res.data.updateAvatar.avatarBase64 }));
+    }, [token]);
+
+    // kept for backwards compat
+    const handleSaveSettings = useCallback(async (newUsername, newPassword) => {
+        if (newUsername) await handleSaveUsername(newUsername);
+        if (newPassword) await handleSavePassword('', newPassword);
+    }, [handleSaveUsername, handleSavePassword]);
 
     const logout = useCallback(() => {
         setToken(null);
@@ -318,7 +330,7 @@ export const AppProvider = ({ children }) => {
             fetch('http://localhost:8080/graphql', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${savedToken}` },
-                body: JSON.stringify({ query: `{ me { id username totalPoints createdAt } }` }),
+                body: JSON.stringify({ query: `{ me { id username totalPoints createdAt avatarBase64 level xpForNextLevel } }` }),
             })
             .then(res => res.json())
             .then(userData => {
@@ -367,6 +379,9 @@ export const AppProvider = ({ children }) => {
         showConfirm,
         confirmState,
         closeConfirm,
+        handleSaveUsername,
+        handleSavePassword,
+        handleSaveAvatar,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

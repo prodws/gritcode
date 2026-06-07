@@ -80,6 +80,10 @@ public class SubmissionService {
         return submissionRepository.findAllByUserId(userId);
     }
 
+    public List<Submission> getSubmissionsByGame(Long gameId) {
+        return submissionRepository.findAllByGameId(gameId);
+    }
+
     public Submission saveSubmission(Long userId, Long problemId, String code, ExecutionResult result) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));

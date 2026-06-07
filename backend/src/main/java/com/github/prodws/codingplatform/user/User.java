@@ -5,19 +5,15 @@ import jakarta.validation.constraints.Email;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
-/**
- * Represents a registered user account.
- * Role defaults to PLAYER and totalPoints to 0 on creation.
- */
-// persistence
 @Entity
 @Table(name = "users")
-// lombok
 @Getter
 @Setter
-@ToString
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // used by Hibernate
+@ToString(exclude = {"following", "followers"})
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
     @Id
@@ -44,6 +40,20 @@ public class User {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String avatarBase64;
+
+    @ManyToMany
+    @JoinTable(
+        name = "user_follows",
+        joinColumns = @JoinColumn(name = "follower_id"),
+        inverseJoinColumns = @JoinColumn(name = "followed_id")
+    )
+    private Set<User> following = new HashSet<>();
+
+    @ManyToMany(mappedBy = "following")
+    private Set<User> followers = new HashSet<>();
 
     public User(String username, String email, String passwordHash) {
         this.username = username;

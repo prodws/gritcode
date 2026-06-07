@@ -1,5 +1,6 @@
 package com.github.prodws.codingplatform.submission;
 
+import com.github.prodws.codingplatform.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -13,6 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SubmissionResolver {
     private final SubmissionService submissionService;
+    private final UserService userService;
 
     @QueryMapping
     public List<Submission> mySubmissions(Authentication auth) {
@@ -20,16 +22,32 @@ public class SubmissionResolver {
         return submissionService.getSubmissionsByUser(userId);
     }
 
+    @QueryMapping
+    public List<Submission> submissionsByUsername(@Argument String username) {
+        Long userId = userService.getUserByUsername(username).getId();
+        return submissionService.getSubmissionsByUser(userId);
+    }
+
+    @QueryMapping
+    public List<Submission> submissionsByGame(@Argument Long gameId) {
+        return submissionService.getSubmissionsByGame(gameId);
+    }
+
     @MutationMapping
     public Submission submitSolution(@Argument("input") SubmitSolutionInput input) {
         ExecutionResult executionResult =
                 submissionService.submitSolution(input.problemId(), input.solutionCode());
-        return submissionService.saveSubmission(
+        Submission saved = submissionService.saveSubmission(
                 input.userId(),
                 input.problemId(),
                 input.solutionCode(),
                 executionResult
         );
+        // Award XP for first-time practice solve
+        if (executionResult.passed()) {
+            userService.addPracticeXpIfFirstSolve(input.userId(), input.problemId());
+        }
+        return saved;
     }
 
     @MutationMapping

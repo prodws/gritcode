@@ -9,6 +9,7 @@ import com.github.prodws.codingplatform.submission.SubmissionRepository;
 import com.github.prodws.codingplatform.submission.SubmissionService;
 import com.github.prodws.codingplatform.user.User;
 import com.github.prodws.codingplatform.user.UserRepository;
+import com.github.prodws.codingplatform.user.UserService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
@@ -41,6 +42,7 @@ public class GameService {
     private final SubmissionRepository submissionRepository;
     private final SubmissionService submissionService;
     private final GameEventPublisher eventPublisher;
+    private final UserService userService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -382,11 +384,21 @@ public class GameService {
                 .map(GameProblem::getProblem)
                 .filter(pr -> pr.getId().equals(problemId))
                 .findFirst().orElseThrow();
-        return switch (p.getDifficulty()) {
-            case EASY -> 50;
-            case MEDIUM -> 100;
-            case HARD -> 200;
+        int base = switch (p.getDifficulty()) {
+            case EASY   -> 100;
+            case MEDIUM -> 200;
+            case HARD   -> 400;
         };
+        // Time bonus: up to 50% extra for solving quickly
+        // Decay linearly over the time limit; minimum is the base score
+        if (game.getStartedAt() != null) {
+            long elapsedSeconds = java.time.Duration.between(game.getStartedAt(), LocalDateTime.now()).toSeconds();
+            long timeLimit = game.getTimeLimitSeconds();
+            double fraction = Math.max(0.0, 1.0 - (double) elapsedSeconds / timeLimit);
+            int bonus = (int) (base * 0.5 * fraction);
+            return base + bonus;
+        }
+        return base;
     }
 
     private void checkAndFinish(Game game) {
@@ -414,10 +426,21 @@ public class GameService {
         teams.sort(Comparator.comparingInt(GameTeam::getScore).reversed());
         int rank = 1;
         Integer topScore = teams.isEmpty() ? null : teams.get(0).getScore();
+        int numTeams = teams.size();
         for (GameTeam t : teams) {
-            t.setRank(rank++);
-            t.setWinner(topScore != null && t.getScore().equals(topScore) && topScore > 0);
+            boolean isWinner = topScore != null && t.getScore().equals(topScore) && topScore > 0;
+            t.setRank(rank);
+            t.setWinner(isWinner);
             teamRepository.save(t);
+
+            // Award XP: winner gets full team score, others get partial based on rank
+            long xpPerPlayer = isWinner
+                    ? (long) t.getScore() + 50L  // bonus for winning
+                    : Math.max(10L, (long) t.getScore() / 2);
+            for (GamePlayer gp : t.getPlayers()) {
+                userService.addPoints(gp.getPlayer().getId(), xpPerPlayer);
+            }
+            rank++;
         }
         Game saved = gameRepository.save(game);
         eventPublisher.publishStateChanged(game.getId());

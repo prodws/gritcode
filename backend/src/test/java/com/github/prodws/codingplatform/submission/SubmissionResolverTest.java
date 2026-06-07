@@ -1,5 +1,6 @@
 package com.github.prodws.codingplatform.submission;
 
+import com.github.prodws.codingplatform.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,12 +16,14 @@ class SubmissionResolverTest {
 
     @Mock
     private SubmissionService submissionService;
-    
+    @Mock
+    private UserService userService;
+
     private SubmissionResolver resolver;
 
     @BeforeEach
     void setUp() {
-        resolver = new SubmissionResolver(submissionService);
+        resolver = new SubmissionResolver(submissionService, userService);
     }
 
     @Test

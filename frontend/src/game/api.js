@@ -99,3 +99,12 @@ export const myActiveGames = (token) =>
 export const myFinishedGames = (token) =>
     gql(token, `{ myFinishedGames { ${GAME_FRAGMENT} } }`)
         .then(d => d.myFinishedGames);
+
+export const fetchGameSubmissions = (token, gameId) =>
+    gql(token, `query($id: ID!) { submissionsByGame(gameId: $id) {
+        id code status passed createdAt
+        user { id username }
+        problem { id title }
+        team { id teamName }
+    } }`, { id: gameId })
+        .then(d => d.submissionsByGame);

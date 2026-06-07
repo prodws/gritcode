@@ -2,6 +2,8 @@ type Query {
     problems: [Problem!]!
     problemById(id: ID!): Problem
     userByUsername(username: String!): User
+    submissionsByUsername(username: String!): [Submission!]!
+    submissionsByGame(gameId: ID!): [Submission!]!
     randomProblem(difficulty: ProblemDifficulty!): Problem
     me: User
     mySubmissions: [Submission!]!
@@ -11,13 +13,19 @@ type Query {
     gameByCode(code: String!): Game
     myActiveGames: [Game!]!
     myFinishedGames: [Game!]!
+    isFollowing(targetUsername: String!): Boolean!
+    followerCount(username: String!): Int!
+    followingCount(username: String!): Int!
 }
 
 type Mutation {
     register(username: String!, email: String!, password: String!): User
     login(emailOrUsername: String!, password: String!): String
     updateUsername(newUsername: String!): User
-    updatePassword(newPassword: String!): User
+    updatePassword(currentPassword: String!, newPassword: String!): User
+    updateAvatar(base64Data: String!): User
+    followUser(username: String!): Boolean!
+    unfollowUser(username: String!): Boolean!
 
     createProblem(
         type: ProblemType!,
@@ -49,6 +57,9 @@ type User {
     email: String
     totalPoints: Int
     createdAt: String
+    avatarBase64: String
+    level: Int
+    xpForNextLevel: Int
 }
 
 type Problem {

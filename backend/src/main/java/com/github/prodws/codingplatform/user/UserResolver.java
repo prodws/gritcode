@@ -5,9 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -36,12 +35,47 @@ public class UserResolver {
 
     @MutationMapping
     public User updateUsername(@Argument String newUsername, Authentication auth) {
-        return userService.updateUsername( AuthUtils.extractUserId(auth), newUsername);
+        return userService.updateUsername(AuthUtils.extractUserId(auth), newUsername);
     }
 
     @MutationMapping
-    public User updatePassword(@Argument String newPassword, Authentication auth) {
-        return userService.updatePassword( AuthUtils.extractUserId(auth), newPassword);
+    public User updatePassword(@Argument String currentPassword, @Argument String newPassword, Authentication auth) {
+        return userService.updatePassword(AuthUtils.extractUserId(auth), currentPassword, newPassword);
+    }
+
+    @MutationMapping
+    public User updateAvatar(@Argument String base64Data, Authentication auth) {
+        return userService.updateAvatar(AuthUtils.extractUserId(auth), base64Data);
+    }
+
+    @MutationMapping
+    public boolean followUser(@Argument String username, Authentication auth) {
+        Long followedId = userService.getUserByUsername(username).getId();
+        return userService.followUser(AuthUtils.extractUserId(auth), followedId);
+    }
+
+    @MutationMapping
+    public boolean unfollowUser(@Argument String username, Authentication auth) {
+        Long followedId = userService.getUserByUsername(username).getId();
+        return userService.unfollowUser(AuthUtils.extractUserId(auth), followedId);
+    }
+
+    @QueryMapping
+    public boolean isFollowing(@Argument String targetUsername, Authentication auth) {
+        Long followedId = userService.getUserByUsername(targetUsername).getId();
+        return userService.isFollowing(AuthUtils.extractUserId(auth), followedId);
+    }
+
+    @QueryMapping
+    public int followerCount(@Argument String username) {
+        Long userId = userService.getUserByUsername(username).getId();
+        return (int) userService.countFollowers(userId);
+    }
+
+    @QueryMapping
+    public int followingCount(@Argument String username) {
+        Long userId = userService.getUserByUsername(username).getId();
+        return (int) userService.countFollowing(userId);
     }
 
     @QueryMapping
@@ -53,5 +87,17 @@ public class UserResolver {
     public User me(Authentication authentication) {
         if (authentication == null) throw new RuntimeException("Not authenticated");
         return userService.getUserById(Long.parseLong(authentication.getName()));
+    }
+
+    // Computed fields on User type
+    @SchemaMapping(typeName = "User", field = "level")
+    public int level(User user) {
+        return UserService.levelFromXp(user.getTotalPoints());
+    }
+
+    @SchemaMapping(typeName = "User", field = "xpForNextLevel")
+    public int xpForNextLevel(User user) {
+        int currentLevel = UserService.levelFromXp(user.getTotalPoints());
+        return (int) UserService.xpForNextLevel(currentLevel);
     }
 }
