@@ -33,7 +33,7 @@ const Navbar = () => {
     return (
         <nav className="navbar">
             <button className="navbar-logo" onClick={() => handleNavigation('/')}>
-                appname
+                gritcode
             </button>
 
             {currentUser && (

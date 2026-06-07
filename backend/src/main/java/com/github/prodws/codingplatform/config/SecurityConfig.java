@@ -26,6 +26,9 @@ import java.util.Base64;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Value("${app.allowed-origins:http://localhost:5173}")
+    private String allowedOrigins;
+
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -36,7 +39,7 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(request -> {
                 var config = new org.springframework.web.cors.CorsConfiguration();
-                config.setAllowedOrigins(java.util.List.of("http://localhost:5173"));
+                config.setAllowedOrigins(java.util.List.of(allowedOrigins.split(",")));
                 config.setAllowedMethods(java.util.List.of("GET", "POST", "OPTIONS"));
                 config.setAllowedHeaders(java.util.List.of("*"));
                 return config;

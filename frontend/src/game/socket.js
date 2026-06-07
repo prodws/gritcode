@@ -7,7 +7,7 @@ const ensureClient = () => {
     if (client && client.connected) return client;
     if (client) return client;
     client = new Client({
-        brokerURL: 'ws://localhost:8080/ws',
+        brokerURL: `${(import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/^http/, 'ws')}/ws`,
         reconnectDelay: 2000,
     });
     client.activate();

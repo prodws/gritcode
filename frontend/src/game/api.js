@@ -1,4 +1,4 @@
-export const GRAPHQL_URL = 'http://localhost:8080/graphql';
+export const GRAPHQL_URL = `${import.meta.env.VITE_API_URL ?? 'http://localhost:8080'}/graphql`;
 
 const GAME_FRAGMENT = `
     id
